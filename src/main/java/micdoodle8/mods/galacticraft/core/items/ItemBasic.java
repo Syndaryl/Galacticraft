@@ -19,8 +19,12 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
+import squeek.applecore.api.food.IEdible;
+import squeek.applecore.api.food.ItemFoodProxy;
+
 import java.util.List;
 
+@Optional.Interface(iface = "squeek.applecore.api.food.IEdible", modid = "AppleCore")
 public class ItemBasic extends Item
 {
     public static final String[] names = { "solar_module_0", "solar_module_1", "rawSilicon", "ingotCopper", "ingotTin", "ingotAluminum", "compressedCopper", "compressedTin", "compressedAluminum", "compressedSteel", "compressedBronze", "compressedIron", "waferSolar", "waferBasic", "waferAdvanced", "dehydratedApple", "dehydratedCarrot", "dehydratedMelon", "dehydratedPotato", "frequencyModule" };
@@ -155,7 +159,19 @@ public class ItemBasic extends Item
         if (par1ItemStack.getItemDamage() > 14 && par1ItemStack.getItemDamage() < 19)
         {
             --par1ItemStack.stackSize;
-            par3EntityPlayer.getFoodStats().addStats(this.getHealAmount(par1ItemStack), this.getSaturationModifier(par1ItemStack));
+            //par3EntityPlayer.getFoodStats().addStats(this.getHealAmount(par1ItemStack), this.getSaturationModifier(par1ItemStack));
+            if (Loader.isModLoaded("AppleCore"))
+            {
+            // one possible compatible method
+                par3EntityPlayer.getFoodStats().func_151686_a(new ItemFoodProxy(this), par1ItemStack);
+            // another possible compatible method:
+            // new ItemFoodProxy(this).onEaten(itemStack, player);
+            }
+            else
+            {
+                // this method is not compatible with AppleCore
+                par3EntityPlayer.getFoodStats().addStats(this.getHealAmount(par1ItemStack), this.getSaturationModifier(par1ItemStack));
+            }
             par2World.playSoundAtEntity(par3EntityPlayer, "random.burp", 0.5F, par2World.rand.nextFloat() * 0.1F + 0.9F);
             if (!par2World.isRemote)
             {
