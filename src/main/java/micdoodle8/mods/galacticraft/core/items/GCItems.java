@@ -66,6 +66,7 @@ public class GCItems
     public static ToolMaterial TOOL_STEEL = EnumHelper.addToolMaterial("steel", 3, 768, 5.0F, 2, 8);
 
     public static ArrayList<Item> hiddenItems = new ArrayList<Item>();
+	private static ItemMetadataFood basicFood;
 
     public static void initItems()
     {
@@ -107,6 +108,7 @@ public class GCItems
         GCItems.key = new ItemKey("key");
         GCItems.partBuggy = new ItemBuggyMaterial("buggymat");
         GCItems.basicItem = new ItemBasic("basicItem");
+        GCItems.basicFood = new ItemMetadataFood("basicFood");
         GCItems.battery = new ItemBattery("battery");
         GCItems.infiniteBatery = new ItemBatteryInfinite("infiniteBattery");
         GCItems.meteorChunk = new ItemMeteorChunk("meteorChunk");
@@ -220,11 +222,11 @@ public class GCItems
         GCCoreUtil.registerGalacticraftItem("waferSolar", GCItems.basicItem, 12);
         GCCoreUtil.registerGalacticraftItem("waferBasic", GCItems.basicItem, 13);
         GCCoreUtil.registerGalacticraftItem("waferAdvanced", GCItems.basicItem, 14);
-        GCCoreUtil.registerGalacticraftItem("dehydratedApple", GCItems.basicItem, 15);
-        GCCoreUtil.registerGalacticraftItem("dehydratedCarrot", GCItems.basicItem, 16);
-        GCCoreUtil.registerGalacticraftItem("dehydratedMelon", GCItems.basicItem, 17);
-        GCCoreUtil.registerGalacticraftItem("dehydratedPotato", GCItems.basicItem, 18);
-        GCCoreUtil.registerGalacticraftItem("frequencyModule", GCItems.basicItem, 19);
+        GCCoreUtil.registerGalacticraftItem("dehydratedApple", GCItems.basicFood, 0);
+        GCCoreUtil.registerGalacticraftItem("dehydratedCarrot", GCItems.basicFood, 1);
+        GCCoreUtil.registerGalacticraftItem("dehydratedMelon", GCItems.basicFood, 2);
+        GCCoreUtil.registerGalacticraftItem("dehydratedPotato", GCItems.basicFood, 3);
+        GCCoreUtil.registerGalacticraftItem("frequencyModule", GCItems.basicItem, 15);
         GCCoreUtil.registerGalacticraftItem("meteorThrowable", GCItems.meteorChunk);
         GCCoreUtil.registerGalacticraftItem("meteorThrowableHot", GCItems.meteorChunk, 1);
         GCCoreUtil.registerGalacticraftItem("standardWrench", GCItems.wrench);
