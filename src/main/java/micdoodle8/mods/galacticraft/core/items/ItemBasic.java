@@ -1,7 +1,5 @@
 package micdoodle8.mods.galacticraft.core.items;
 
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.Optional;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import micdoodle8.mods.galacticraft.core.GalacticraftCore;
@@ -20,14 +18,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
-import squeek.applecore.api.food.FoodValues;
-import squeek.applecore.api.food.IEdible;
-import squeek.applecore.api.food.ItemFoodProxy;
 
 import java.util.List;
 
-@Optional.Interface(iface = "squeek.applecore.api.food.IEdible", modid = "AppleCore")
-public class ItemBasic extends Item implements IEdible
+public class ItemBasic extends Item
 {
     public static final String[] names = { "solar_module_0", "solar_module_1", "rawSilicon", "ingotCopper", "ingotTin", "ingotAluminum", "compressedCopper", "compressedTin", "compressedAluminum", "compressedSteel", "compressedBronze", "compressedIron", "waferSolar", "waferBasic", "waferAdvanced", "dehydratedApple", "dehydratedCarrot", "dehydratedMelon", "dehydratedPotato", "frequencyModule" };
 
@@ -41,25 +35,6 @@ public class ItemBasic extends Item implements IEdible
         this.setUnlocalizedName(assetName);
         this.setTextureName(GalacticraftCore.TEXTURE_PREFIX + assetName);
     }
-    
-	@Optional.Method(modid = "AppleCore")
-	@Override
-	public FoodValues getFoodValues(ItemStack itemStack)
-	{
-		return new FoodValues(this.getHealAmount(itemStack), this.getSaturationModifier(itemStack));
-	}
-
-	// This needs to be abstracted into an Optional method,
-	// otherwise the ItemFoodProxy reference will cause problems
-	@Optional.Method(modid = "AppleCore")
-	public void onEatenCompatibility(ItemStack itemStack, EntityPlayer player)
-	{
-		// one possible compatible method
-		player.getFoodStats().func_151686_a(new ItemFoodProxy(this), itemStack);
-
-		// another possible compatible method:
-		// new ItemFoodProxy(this).onEaten(itemStack, player);
-	}
 
     @Override
     public CreativeTabs getCreativeTab()
@@ -180,16 +155,7 @@ public class ItemBasic extends Item implements IEdible
         if (par1ItemStack.getItemDamage() > 14 && par1ItemStack.getItemDamage() < 19)
         {
             --par1ItemStack.stackSize;
-    		if (Loader.isModLoaded("AppleCore"))
-    		{
-    			onEatenCompatibility(par1ItemStack, par3EntityPlayer);
-    		}
-    		else
-    		{
-    			// this method is not compatible with AppleCore
-    			par3EntityPlayer.getFoodStats().addStats(this.getHealAmount(par1ItemStack), this.getSaturationModifier(par1ItemStack));
-    		}
-            //par3EntityPlayer.getFoodStats().addStats(this.getHealAmount(par1ItemStack), this.getSaturationModifier(par1ItemStack));
+            par3EntityPlayer.getFoodStats().addStats(this.getHealAmount(par1ItemStack), this.getSaturationModifier(par1ItemStack));
             par2World.playSoundAtEntity(par3EntityPlayer, "random.burp", 0.5F, par2World.rand.nextFloat() * 0.1F + 0.9F);
             if (!par2World.isRemote)
             {
