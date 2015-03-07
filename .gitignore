@@ -29,6 +29,7 @@ CHANGELOG
 /src/minecraft/mods/fluidmech/
 /src/minecraft/mods/buildcraft/
 /src/minecraft/micdoodle8/mods/galacticraft/mars/
+/src/minecraft/micdoodle8/mods/miccore/
 
 *.bat
 *.sh
@@ -199,3 +200,19 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+src/main/java/micdoodle8/mods/miccore/MicdoodleTransformer.java
+src/main/java/micdoodle8/mods/miccore/MicdoodlePlugin.java
+src/main/java/micdoodle8/mods/miccore/MicdoodleModContainer.java
+src/main/java/micdoodle8/mods/miccore/MicdoodleAccessTransformer.java
+src/main/java/micdoodle8/mods/miccore/DepLoader.java
+src/main/java/micdoodle8/mods/miccore/ConfigManagerMicCore.java
+src/main/java/micdoodle8/mods/miccore/Annotations.java
+micdoodlecore_at.cfg
+nei_at.cfg
+gradlew
+gradle/wrapper/gradle-wrapper.properties
+gradle/wrapper/gradle-wrapper.jar
+GalacticraftCore-Dev-BETA-1.7-3.0.1.8.jar
+Galacticraft-API-BETA-1.7-3.0.1.8.jar
+*.jar
+src/main/resources/META-INF/MANIFEST.MF
