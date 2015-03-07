@@ -23,7 +23,7 @@ import java.util.List;
 
 public class ItemBasic extends Item
 {
-    public static final String[] names = { "solar_module_0", "solar_module_1", "rawSilicon", "ingotCopper", "ingotTin", "ingotAluminum", "compressedCopper", "compressedTin", "compressedAluminum", "compressedSteel", "compressedBronze", "compressedIron", "waferSolar", "waferBasic", "waferAdvanced", "frequencyModule" };
+    public static final String[] names = { "solar_module_0", "solar_module_1", "rawSilicon", "ingotCopper", "ingotTin", "ingotAluminum", "compressedCopper", "compressedTin", "compressedAluminum", "compressedSteel", "compressedBronze", "compressedIron", "waferSolar", "waferBasic", "waferAdvanced", "dehydratedApple", "dehydratedCarrot", "dehydratedMelon", "dehydratedPotato", "frequencyModule" };
 
     protected IIcon[] icons = new IIcon[ItemBasic.names.length];
 
@@ -64,6 +64,11 @@ public class ItemBasic extends Item
     @Override
     public String getUnlocalizedName(ItemStack itemStack)
     {
+        if (itemStack.getItemDamage() > 14 && itemStack.getItemDamage() < 19)
+        {
+            return this.getUnlocalizedName() + ".cannedFood";
+        }
+
         return this.getUnlocalizedName() + "." + ItemBasic.names[itemStack.getItemDamage()];
     }
 
@@ -99,7 +104,11 @@ public class ItemBasic extends Item
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List par3List, boolean par4)
     {
-        if (par1ItemStack.getItemDamage() == 15)
+        if (par1ItemStack.getItemDamage() > 14 && par1ItemStack.getItemDamage() < 19)
+        {
+            par3List.add(EnumColor.BRIGHT_GREEN + GCCoreUtil.translate(this.getUnlocalizedName() + "." + ItemBasic.names[par1ItemStack.getItemDamage()] + ".name"));
+        }
+        else if (par1ItemStack.getItemDamage() == 19)
         {
             par3List.add(EnumColor.AQUA + GCCoreUtil.translate("gui.frequencyModule.desc.0"));
             par3List.add(EnumColor.AQUA + GCCoreUtil.translate("gui.frequencyModule.desc.1"));
@@ -108,42 +117,93 @@ public class ItemBasic extends Item
 
     public int getHealAmount(ItemStack par1ItemStack)
     {
-        return 0;
+        switch (par1ItemStack.getItemDamage())
+        {
+        case 15:
+            return 8;
+        case 16:
+            return 8;
+        case 17:
+            return 4;
+        case 18:
+            return 2;
+        default:
+            return 0;
+        }
     }
 
     public float getSaturationModifier(ItemStack par1ItemStack)
     {
-        return 0.0F;
+        switch (par1ItemStack.getItemDamage())
+        {
+        case 15:
+            return 0.3F;
+        case 16:
+            return 0.6F;
+        case 17:
+            return 0.3F;
+        case 18:
+            return 0.3F;
+        default:
+            return 0.0F;
+        }
     }
 
     @Override
     public ItemStack onEaten(ItemStack par1ItemStack, World par2World, EntityPlayer par3EntityPlayer)
     {
+        if (par1ItemStack.getItemDamage() > 14 && par1ItemStack.getItemDamage() < 19)
+        {
+            --par1ItemStack.stackSize;
+            par3EntityPlayer.getFoodStats().addStats(this.getHealAmount(par1ItemStack), this.getSaturationModifier(par1ItemStack));
+            par2World.playSoundAtEntity(par3EntityPlayer, "random.burp", 0.5F, par2World.rand.nextFloat() * 0.1F + 0.9F);
+            if (!par2World.isRemote)
+            {
+                par3EntityPlayer.entityDropItem(new ItemStack(GCItems.canister, 1, 0), 0.0F);
+            }
+            return par1ItemStack;
+        }
+
         return super.onEaten(par1ItemStack, par2World, par3EntityPlayer);
     }
 
     @Override
     public int getMaxItemUseDuration(ItemStack par1ItemStack)
     {
+        if (par1ItemStack.getItemDamage() > 14 && par1ItemStack.getItemDamage() < 19)
+        {
+            return 32;
+        }
+
         return super.getMaxItemUseDuration(par1ItemStack);
     }
 
     @Override
     public EnumAction getItemUseAction(ItemStack par1ItemStack)
     {
+        if (par1ItemStack.getItemDamage() > 14 && par1ItemStack.getItemDamage() < 19)
+        {
+            return EnumAction.eat;
+        }
+
         return super.getItemUseAction(par1ItemStack);
     }
 
     @Override
     public ItemStack onItemRightClick(ItemStack par1ItemStack, World par2World, EntityPlayer par3EntityPlayer)
     {
+        if (par1ItemStack.getItemDamage() > 14 && par1ItemStack.getItemDamage() < 19 && par3EntityPlayer.canEat(false))
+        {
+            par3EntityPlayer.setItemInUse(par1ItemStack, this.getMaxItemUseDuration(par1ItemStack));
+        }
+
         return par1ItemStack;
     }
     
     @Override
     public boolean onLeftClickEntity(ItemStack itemStack, EntityPlayer player, Entity entity)
     {
-    	if (itemStack.getItemDamage() != 15) return false;
+    	if (itemStack.getItemDamage() != 19) return false;
     	
     	//Frequency module
     	if (!player.worldObj.isRemote && entity != null && !(entity instanceof EntityPlayer))
