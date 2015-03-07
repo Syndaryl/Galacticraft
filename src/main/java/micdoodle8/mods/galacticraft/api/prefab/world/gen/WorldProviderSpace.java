@@ -2,7 +2,6 @@ package micdoodle8.mods.galacticraft.api.prefab.world.gen;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import micdoodle8.mods.galacticraft.api.galaxies.CelestialBody;
 import micdoodle8.mods.galacticraft.api.vector.Vector3;
 import micdoodle8.mods.galacticraft.api.world.IAtmosphericGas;
 import micdoodle8.mods.galacticraft.api.world.IGalacticraftWorldProvider;
@@ -20,15 +19,6 @@ import java.util.Arrays;
 
 public abstract class WorldProviderSpace extends WorldProvider implements IGalacticraftWorldProvider
 {
-    /**
-     * The celestial body object for this dimension
-     *
-     * @return The Moon or Planet object for this dimension
-     * @see micdoodle8.mods.galacticraft.api.galaxies.Planet
-     * @see micdoodle8.mods.galacticraft.api.galaxies.Moon
-     */
-    public abstract CelestialBody getCelestialBody();
-
     /**
      * The fog color in this dimension
      */
@@ -201,7 +191,7 @@ public abstract class WorldProviderSpace extends WorldProvider implements IGalac
     @Override
     public boolean hasBreathableAtmosphere()
     {
-        return this.isGasPresent(IAtmosphericGas.OXYGEN);
+        return this.isGasPresent(IAtmosphericGas.OXYGEN) && !this.isGasPresent(IAtmosphericGas.CO2);
     }
 
     @Override
@@ -270,5 +260,11 @@ public abstract class WorldProviderSpace extends WorldProvider implements IGalac
     public boolean shouldMapSpin(String entity, double x, double y, double z)
     {
         return false;
+    }
+
+    @Override
+    public float getSolarSize()
+    {
+        return 1.0F / this.getCelestialBody().getRelativeDistanceFromCenter().unScaledDistance;
     }
 }

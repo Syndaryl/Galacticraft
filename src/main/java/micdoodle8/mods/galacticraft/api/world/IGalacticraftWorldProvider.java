@@ -1,6 +1,7 @@
 package micdoodle8.mods.galacticraft.api.world;
 
 import micdoodle8.mods.galacticraft.api.entity.IRocketType;
+import micdoodle8.mods.galacticraft.api.galaxies.CelestialBody;
 
 public interface IGalacticraftWorldProvider
 {
@@ -90,4 +91,21 @@ public interface IGalacticraftWorldProvider
      * @return Flag movement magnitude. Relative to earth's value of 1.0F
      */
     public float getWindLevel();
+    
+    /**
+     * Factor by which the sun is to be drawn smaller (<1.0) or larger (>1.0) than
+     * the sun on the Overworld
+     * 
+     * @return  factor
+     */
+    public float getSolarSize();
+
+    /**
+     * The celestial body object for this dimension
+     *
+     * @return The Moon or Planet object for this dimension
+     * @see micdoodle8.mods.galacticraft.api.galaxies.Planet
+     * @see micdoodle8.mods.galacticraft.api.galaxies.Moon
+     */
+    public abstract CelestialBody getCelestialBody();
 }

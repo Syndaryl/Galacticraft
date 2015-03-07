@@ -13,6 +13,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.lwjgl.util.vector.Vector3f;
 
 import java.util.List;
 
@@ -809,4 +810,8 @@ public class Vector3 implements Cloneable
         return "Vector3 [" + this.x + "," + this.y + "," + this.z + "]";
     }
 
+    public Vector3f toVector3f()
+    {
+        return new Vector3f((float)this.x, (float)this.y, (float)this.z);
+    }
 }

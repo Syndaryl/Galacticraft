@@ -17,7 +17,6 @@ import micdoodle8.mods.galacticraft.api.recipe.ISchematicPage;
 import micdoodle8.mods.galacticraft.api.recipe.SchematicEvent.FlipPage;
 import micdoodle8.mods.galacticraft.api.recipe.SchematicEvent.Unlock;
 import micdoodle8.mods.galacticraft.api.recipe.SchematicRegistry;
-import micdoodle8.mods.galacticraft.api.world.IAtmosphericGas;
 import micdoodle8.mods.galacticraft.api.world.IGalacticraftWorldProvider;
 import micdoodle8.mods.galacticraft.core.Constants;
 import micdoodle8.mods.galacticraft.core.GalacticraftCore;
@@ -64,12 +63,12 @@ import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.BiomeGenDesert;
 import net.minecraftforge.client.event.sound.PlaySoundEvent17;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.living.ZombieEvent.SummonAidEvent;
 import net.minecraftforge.event.entity.player.FillBucketEvent;
+import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.event.terraingen.TerrainGen;
@@ -129,8 +128,11 @@ public class EventHandlerGC
     {
         if (event.source.damageType.equals(DamageSource.onFire.damageType))
         {
-            if (event.entityLiving.worldObj.provider instanceof IGalacticraftWorldProvider)
+            if (OxygenUtil.noAtmosphericCombustion(event.entityLiving.worldObj.provider))
             {
+    	        if (OxygenUtil.isAABBInBreathableAirBlock(event.entityLiving.worldObj, event.entityLiving.boundingBox))
+    	        	return;
+
                 if (event.entityLiving.worldObj instanceof WorldServer)
                 {
                     ((WorldServer) event.entityLiving.worldObj).func_147487_a("smoke", event.entityLiving.posX, event.entityLiving.posY + event.entityLiving.boundingBox.maxY - event.entityLiving.boundingBox.minY, event.entityLiving.posZ, 50, 0.0, 0.05, 0.0, 0.001);
@@ -164,13 +166,16 @@ public class EventHandlerGC
     @SubscribeEvent
     public void onPlayerClicked(PlayerInteractEvent event)
     {
-        final ItemStack heldStack = event.entityPlayer.inventory.getCurrentItem();
-
+        //Skip events triggered from Thaumcraft Golems and other non-players
+    	if (event.entityPlayer == null || event.entityPlayer.inventory == null) return;
+        
+    	final ItemStack heldStack = event.entityPlayer.inventory.getCurrentItem();
         final TileEntity tileClicked = event.entityPlayer.worldObj.getTileEntity(event.x, event.y, event.z);
-        final Block idClicked = event.entityPlayer.worldObj.getBlock(event.x, event.y, event.z);
 
         if (heldStack != null)
         {
+            final Block idClicked = event.entityPlayer.worldObj.getBlock(event.x, event.y, event.z);
+
             if (tileClicked != null && tileClicked instanceof IKeyable)
             {
                 if (event.action.equals(PlayerInteractEvent.Action.LEFT_CLICK_BLOCK))
@@ -198,11 +203,11 @@ public class EventHandlerGC
                 }
             }
 
-            if (event.entityPlayer.worldObj.provider instanceof IGalacticraftWorldProvider && !((IGalacticraftWorldProvider) event.entityPlayer.worldObj.provider).isGasPresent(IAtmosphericGas.OXYGEN) && heldStack.getItem() instanceof ItemFlintAndSteel)
+            if (heldStack.getItem() instanceof ItemFlintAndSteel)
             {
                 if (!event.entity.worldObj.isRemote && event.action.equals(PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK))
                 {
-                    if (idClicked != Blocks.tnt && !OxygenUtil.isAABBInBreathableAirBlock(event.entityLiving.worldObj, AxisAlignedBB.getBoundingBox(event.x, event.y, event.z, event.x + 1, event.y + 2, event.z + 1)))
+                    if (idClicked != Blocks.tnt  && OxygenUtil.noAtmosphericCombustion(event.entityPlayer.worldObj.provider) && !OxygenUtil.isAABBInBreathableAirBlock(event.entityLiving.worldObj, AxisAlignedBB.getBoundingBox(event.x, event.y, event.z, event.x + 1, event.y + 2, event.z + 1)))
                     {
                         event.setCanceled(true);
                     }
@@ -228,7 +233,7 @@ public class EventHandlerGC
         {
             if (!(event.entityLiving instanceof EntityPlayer))
             {
-                if ((!(event.entityLiving instanceof IEntityBreathable) || !((IEntityBreathable) event.entityLiving).canBreath()) && event.entityLiving.ticksExisted % 100 == 0)
+                if (event.entityLiving.ticksExisted % 100 == 0 && (!(event.entityLiving instanceof IEntityBreathable) || !((IEntityBreathable) event.entityLiving).canBreath()) && !((IGalacticraftWorldProvider)event.entityLiving.worldObj.provider).hasBreathableAtmosphere())
                 {
                     if (!OxygenUtil.isAABBInBreathableAirBlock(event.entityLiving))
                     {
@@ -257,7 +262,10 @@ public class EventHandlerGC
 
         Block bcOilID1 = null;
         Block bcOilID2 = null;
+        Block bcFuelID1 = null;
+        Block bcFuelID2 = null;
         Item bcOilBucket = null;
+        Item bcFuelBucket = null;
 
         try
         {
@@ -273,9 +281,21 @@ public class EventHandlerGC
                     {
                         bcOilID2 = (Block) f.get(null);
                     }
+                    if (f.getName().equals("fuelMoving"))
+                    {
+                        bcFuelID1 = (Block) f.get(null);
+                    }
+                    else if (f.getName().equals("fuelStill"))
+                    {
+                        bcFuelID2 = (Block) f.get(null);
+                    }
                     else if (f.getName().equals("bucketOil"))
                     {
                         bcOilBucket = (Item) f.get(null);
+                    }
+                    else if (f.getName().equals("bucketFuel"))
+                    {
+                        bcFuelBucket = (Item) f.get(null);
                     }
                 }
             }
@@ -300,6 +320,12 @@ public class EventHandlerGC
             event.result = new ItemStack(bcOilBucket);
             event.setResult(Result.ALLOW);
         }
+        else if (bcFuelBucket != null && (blockID == bcFuelID1 || blockID == bcFuelID2 || blockID == GCBlocks.fuelStill) && event.world.getBlockMetadata(pos.blockX, pos.blockY, pos.blockZ) == 0)
+        {
+            event.world.setBlockToAir(pos.blockX, pos.blockY, pos.blockZ);
+            event.result = new ItemStack(bcFuelBucket);
+            event.setResult(Result.ALLOW);
+        }
         else if ((blockID == GCBlocks.crudeOilStill || blockID == GCBlocks.fuelStill) && event.world.getBlockMetadata(pos.blockX, pos.blockY, pos.blockZ) == 0)
         {
            event.setCanceled(true);
@@ -312,6 +338,9 @@ public class EventHandlerGC
     public void populate(PopulateChunkEvent.Post event)
     {
         final boolean doGen = TerrainGen.populate(event.chunkProvider, event.world, event.rand, event.chunkX, event.chunkZ, event.hasVillageGenerated, PopulateChunkEvent.Populate.EventType.CUSTOM);
+        
+        if (!doGen) return;
+        
         boolean doGen2 = false;
 
         for (Integer dim : ConfigManagerCore.externalOilGen)
@@ -323,7 +352,7 @@ public class EventHandlerGC
             }
         }
 
-        if (!doGen || !(event.world.provider instanceof IGalacticraftWorldProvider) && !doGen2)
+        if (!doGen2)
         {
             return;
         }
@@ -570,23 +599,25 @@ public class EventHandlerGC
     }
 
     @SubscribeEvent
-    public void onPlayerDeath(LivingDeathEvent event)
+    public void onPlayerDeath(PlayerDropsEvent event)
     {
         if (event.entityLiving instanceof EntityPlayerMP)
         {
             GCPlayerStats stats = GCPlayerStats.get((EntityPlayerMP) event.entityLiving);
             if (!event.entityLiving.worldObj.getGameRules().getGameRuleBooleanValue("keepInventory"))
             {
-                for (int i = 0; i < stats.extendedInventory.getSizeInventory(); i++)
+            	event.entityLiving.captureDrops = true;
+                for (int i = stats.extendedInventory.getSizeInventory() - 1; i >= 0; i--)
                 {
                     ItemStack stack = stats.extendedInventory.getStackInSlot(i);
 
                     if (stack != null)
                     {
-                        ((EntityPlayerMP) event.entityLiving).dropPlayerItemWithRandomChoice(stack, true);
+                        ((EntityPlayerMP) event.entityLiving).func_146097_a(stack, true, false);
                         stats.extendedInventory.setInventorySlotContents(i, null);
                     }
                 }
+                event.entityLiving.captureDrops = false;
             }
         }
     }

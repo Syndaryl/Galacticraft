@@ -1,6 +1,7 @@
 package micdoodle8.mods.galacticraft.core.world.gen.dungeon;
 
 import micdoodle8.mods.galacticraft.core.blocks.GCBlocks;
+import micdoodle8.mods.galacticraft.core.util.OxygenUtil;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ChunkCoordinates;
@@ -399,8 +400,16 @@ public class MapGenDungeon
                     {
                         if (flag2 != -1)
                         {
-                            this.placeBlock(blocks, metas, i, j, k, cx, cz, GCBlocks.unlitTorch, 0);
-                            this.worldObj.scheduleBlockUpdateWithPriority(i, j, k, GCBlocks.unlitTorch, 40, 0);
+                        	if (OxygenUtil.noAtmosphericCombustion(this.worldObj.provider))
+                        	{
+                                this.placeBlock(blocks, metas, i, j, k, cx, cz, GCBlocks.unlitTorch, 0);
+                                this.worldObj.scheduleBlockUpdateWithPriority(i, j, k, GCBlocks.unlitTorch, 40, 0);
+                        	}
+                        	else
+                        	{
+                                this.placeBlock(blocks, metas, i, j, k, cx, cz, Blocks.torch, 0);
+                                this.worldObj.scheduleBlockUpdateWithPriority(i, j, k, Blocks.torch, 40, 0);
+                        	}
                         }
                         else
                         {

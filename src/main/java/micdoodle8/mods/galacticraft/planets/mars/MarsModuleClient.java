@@ -12,6 +12,7 @@ import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import micdoodle8.mods.galacticraft.api.vector.Vector3;
+import micdoodle8.mods.galacticraft.api.world.IGalacticraftWorldProvider;
 import micdoodle8.mods.galacticraft.core.client.CloudRenderer;
 import micdoodle8.mods.galacticraft.core.client.render.entities.RenderBubble;
 import micdoodle8.mods.galacticraft.core.client.render.entities.RenderTier1Rocket;
@@ -22,10 +23,7 @@ import micdoodle8.mods.galacticraft.planets.mars.blocks.MarsBlocks;
 import micdoodle8.mods.galacticraft.planets.mars.client.SkyProviderMars;
 import micdoodle8.mods.galacticraft.planets.mars.client.gui.*;
 import micdoodle8.mods.galacticraft.planets.mars.client.model.ModelTier2Rocket;
-import micdoodle8.mods.galacticraft.planets.mars.client.render.block.BlockRendererCavernousVines;
-import micdoodle8.mods.galacticraft.planets.mars.client.render.block.BlockRendererEgg;
-import micdoodle8.mods.galacticraft.planets.mars.client.render.block.BlockRendererMachine;
-import micdoodle8.mods.galacticraft.planets.mars.client.render.block.BlockRendererTier2TreasureChest;
+import micdoodle8.mods.galacticraft.planets.mars.client.render.block.*;
 import micdoodle8.mods.galacticraft.planets.mars.client.render.entity.*;
 import micdoodle8.mods.galacticraft.planets.mars.client.render.item.ItemRendererMachine;
 import micdoodle8.mods.galacticraft.planets.mars.client.render.item.ItemRendererTier2Rocket;
@@ -58,6 +56,7 @@ public class MarsModuleClient implements IPlanetsModuleClient
     private static int eggRenderID;
     private static int treasureRenderID;
     private static int machineRenderID;
+    private static int renderIdHydrogenPipe;
 
     @Override
     public void preInit(FMLPreInitializationEvent event)
@@ -77,6 +76,8 @@ public class MarsModuleClient implements IPlanetsModuleClient
         RenderingRegistry.registerBlockHandler(new BlockRendererTier2TreasureChest(MarsModuleClient.treasureRenderID));
         MarsModuleClient.machineRenderID = RenderingRegistry.getNextAvailableRenderId();
         RenderingRegistry.registerBlockHandler(new BlockRendererMachine(MarsModuleClient.machineRenderID));
+        MarsModuleClient.renderIdHydrogenPipe = RenderingRegistry.getNextAvailableRenderId();        
+        RenderingRegistry.registerBlockHandler(new BlockRendererHydrogenPipe(MarsModuleClient.renderIdHydrogenPipe));
     }
 
     @Override
@@ -150,6 +151,10 @@ public class MarsModuleClient implements IPlanetsModuleClient
         if (block == MarsBlocks.vine)
         {
             return MarsModuleClient.vineRenderID;
+        }
+        else if (block == MarsBlocks.hydrogenPipe)
+        {
+            return MarsModuleClient.renderIdHydrogenPipe;
         }
         else if (block == MarsBlocks.rock)
         {
@@ -233,7 +238,7 @@ public class MarsModuleClient implements IPlanetsModuleClient
                 {
                     if (world.provider.getSkyRenderer() == null)
                     {
-                        world.provider.setSkyRenderer(new SkyProviderMars());
+                        world.provider.setSkyRenderer(new SkyProviderMars((IGalacticraftWorldProvider) world.provider));
                     }
 
                     if (world.provider.getCloudRenderer() == null)

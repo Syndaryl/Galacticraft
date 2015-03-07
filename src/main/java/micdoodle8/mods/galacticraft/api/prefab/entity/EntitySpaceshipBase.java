@@ -1,6 +1,5 @@
 package micdoodle8.mods.galacticraft.api.prefab.entity;
 
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -196,7 +195,7 @@ public abstract class EntitySpaceshipBase extends Entity implements IPacketRecei
         if (this.addToTelemetry)
         {
         	this.addToTelemetry = false;
-			for (BlockVec3Dim vec : this.telemetryList)
+			for (BlockVec3Dim vec : new ArrayList<BlockVec3Dim>(this.telemetryList))
 			{
 				TileEntity t1 = vec.getTileEntity();
 				if (t1 instanceof TileEntityTelemetry && !t1.isInvalid())
@@ -368,7 +367,7 @@ public abstract class EntitySpaceshipBase extends Entity implements IPacketRecei
     @Override
     public void getNetworkedData(ArrayList<Object> list)
     {
-        if (FMLCommonHandler.instance().getEffectiveSide() != Side.SERVER)
+        if (this.worldObj.isRemote)
         {
             new Exception().printStackTrace();
         }
@@ -417,7 +416,7 @@ public abstract class EntitySpaceshipBase extends Entity implements IPacketRecei
         if (telemetryList.size() > 0)
         {
             NBTTagList teleNBTList = new NBTTagList();
-            for (BlockVec3Dim vec : this.telemetryList)
+            for (BlockVec3Dim vec : new ArrayList<BlockVec3Dim>(this.telemetryList))
             {
                 NBTTagCompound tag = new NBTTagCompound();
                 vec.writeToNBT(tag);
@@ -574,7 +573,7 @@ public abstract class EntitySpaceshipBase extends Entity implements IPacketRecei
 	public ArrayList<TileEntityTelemetry> getTelemetry()
 	{
 		ArrayList<TileEntityTelemetry> returnList = new ArrayList<TileEntityTelemetry>();
-		for (BlockVec3Dim vec : this.telemetryList)
+		for (BlockVec3Dim vec : new ArrayList<BlockVec3Dim>(this.telemetryList))
 		{
 			TileEntity t1 = vec.getTileEntity();
 			if (t1 instanceof TileEntityTelemetry && !t1.isInvalid())

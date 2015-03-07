@@ -6,6 +6,7 @@ import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import micdoodle8.mods.galacticraft.api.event.client.CelestialBodyRenderEvent;
+import micdoodle8.mods.galacticraft.api.world.IGalacticraftWorldProvider;
 import micdoodle8.mods.galacticraft.core.client.CloudRenderer;
 import micdoodle8.mods.galacticraft.core.client.gui.screen.GuiCelestialSelection;
 import micdoodle8.mods.galacticraft.core.proxy.ClientProxyCore.EventSpecialRender;
@@ -15,7 +16,6 @@ import micdoodle8.mods.galacticraft.planets.asteroids.client.render.NetworkRende
 import micdoodle8.mods.galacticraft.planets.asteroids.dimension.WorldProviderAsteroids;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
-
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;
 
@@ -34,7 +34,7 @@ public class AsteroidsEventHandlerClient
             {
                 if (world.provider.getSkyRenderer() == null)
                 {
-                    world.provider.setSkyRenderer(new SkyProviderAsteroids());
+                    world.provider.setSkyRenderer(new SkyProviderAsteroids((IGalacticraftWorldProvider) world.provider));
                 }
 
                 if (world.provider.getCloudRenderer() == null)

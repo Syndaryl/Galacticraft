@@ -1,7 +1,6 @@
 package micdoodle8.mods.galacticraft.planets.mars.entities;
 
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
 import io.netty.buffer.ByteBuf;
 import micdoodle8.mods.galacticraft.api.entity.IRocketType;
 import micdoodle8.mods.galacticraft.api.entity.IWorldTransferCallback;
@@ -143,7 +142,7 @@ public class EntityCargoRocket extends EntityAutoRocket implements IRocketType, 
 
         if ((this.getLaunched() || this.launchPhase == EnumLaunchPhase.IGNITED.ordinal() && this.rand.nextInt(i) == 0) && !ConfigManagerCore.disableSpaceshipParticles && this.hasValidFuel())
         {
-            if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
+            if (this.worldObj.isRemote)
             {
                 this.spawnParticles(this.getLaunched());
             }
@@ -277,7 +276,8 @@ public class EntityCargoRocket extends EntityAutoRocket implements IRocketType, 
     @Override
     public int getSizeInventory()
     {
-        return this.rocketType.getInventorySpace();
+        if (this.rocketType == null) return 0;
+    	return this.rocketType.getInventorySpace();
     }
 
     @Override
@@ -365,6 +365,6 @@ public class EntityCargoRocket extends EntityAutoRocket implements IRocketType, 
     
     public double getOnPadYOffset()
     {
-    	return -0.25D;
+    	return 0D;//-0.25D;
     }
 }

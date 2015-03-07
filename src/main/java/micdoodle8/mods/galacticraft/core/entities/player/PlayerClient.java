@@ -16,6 +16,7 @@ import micdoodle8.mods.galacticraft.core.network.PacketSimple.EnumSimplePacket;
 import micdoodle8.mods.galacticraft.core.proxy.ClientProxyCore;
 import micdoodle8.mods.galacticraft.core.tick.TickHandlerClient;
 import micdoodle8.mods.galacticraft.core.tile.TileEntityAdvanced;
+import micdoodle8.mods.galacticraft.core.util.EnumColor;
 import micdoodle8.mods.galacticraft.core.util.GCCoreUtil;
 import micdoodle8.mods.galacticraft.core.util.WorldUtil;
 import micdoodle8.mods.galacticraft.core.wrappers.PlayerGearData;
@@ -25,11 +26,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.*;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -289,45 +286,38 @@ public class PlayerClient implements IPlayerClient
 		// 1,2,3 : Compressor, CF, Standard Wrench
 		// 4,5,6 : Fuel loader, Launchpad, NASA Workbench
 		// 7: oil found 8: placed rocket
+
 		GCPlayerStatsClient stats = GCPlayerStatsClient.get(player);
 		int flag = stats.buildFlags;
 		if (flag == -1) flag = 0;
+		int repeatCount = flag >> 9;
+		if (repeatCount <= 3)
+		{
+			repeatCount++;
+		}
 		if ((flag & 1 << i) > 0) return;
 		flag |= 1 << i;
-		GalacticraftCore.packetPipeline.sendToServer(new PacketSimple(EnumSimplePacket.S_BUILDFLAGS_UPDATE, new Object[] { flag }));
+		stats.buildFlags = (flag & 511) + (repeatCount << 9);
+		GalacticraftCore.packetPipeline.sendToServer(new PacketSimple(EnumSimplePacket.S_BUILDFLAGS_UPDATE, new Object[] { stats.buildFlags }));
 		switch (i) {
 		case 0:
-			sendChat(player, GCCoreUtil.translate("gui.message.help1")+": www."+GalacticraftCore.PREFIX+"com/wiki");
-			break;
 		case 1:
-			sendChat(player, GCCoreUtil.translate("gui.message.help1")+": www."+GalacticraftCore.PREFIX+"com/wiki/1");
-			break;
 		case 2:
-			sendChat(player, GCCoreUtil.translate("gui.message.help1")+": www."+GalacticraftCore.PREFIX+"com/wiki/1");
-			break;
 		case 3:
-			sendChat(player, GCCoreUtil.translate("gui.message.help1")+": www."+GalacticraftCore.PREFIX+"com/wiki/1");
+			player.addChatMessage(IChatComponent.Serializer.func_150699_a("[{\"text\":\"" + GCCoreUtil.translate("gui.message.help1") + ": \",\"color\":\"white\"}," + "{\"text\":\" " + EnumColor.BRIGHT_GREEN + "wiki."+GalacticraftCore.PREFIX+"com/wiki/1" + "\"," + "\"color\":\"green\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":" + "{\"text\":\""+ GCCoreUtil.translate("gui.message.clicklink") +"\",\"color\":\"yellow\"}}," + "\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://wiki."+GalacticraftCore.PREFIX+"com/wiki/1" + "\"}}]"));
+			player.addChatMessage(new ChatComponentText(GCCoreUtil.translate("gui.message.help1a") + EnumColor.AQUA + " /gchelp"));
 			break;
 		case 4:
-			sendChat(player, GCCoreUtil.translate("gui.message.help2")+": www."+GalacticraftCore.PREFIX+"com/wiki/2");
-			break;
 		case 5:
-			sendChat(player, GCCoreUtil.translate("gui.message.help2")+": www."+GalacticraftCore.PREFIX+"com/wiki/2");
-			break;
 		case 6:
-			sendChat(player, GCCoreUtil.translate("gui.message.help2")+": www."+GalacticraftCore.PREFIX+"com/wiki/2");
+			player.addChatMessage(IChatComponent.Serializer.func_150699_a("[{\"text\":\"" + GCCoreUtil.translate("gui.message.help2") + ": \",\"color\":\"white\"}," + "{\"text\":\" " + EnumColor.BRIGHT_GREEN + "wiki."+GalacticraftCore.PREFIX+"com/wiki/2" + "\"," + "\"color\":\"green\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":" + "{\"text\":\""+ GCCoreUtil.translate("gui.message.clicklink") +"\",\"color\":\"yellow\"}}," + "\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://wiki."+GalacticraftCore.PREFIX+"com/wiki/2" + "\"}}]"));
 			break;
 		case 7:
-			sendChat(player, GCCoreUtil.translate("gui.message.help3")+": www."+GalacticraftCore.PREFIX+"com/wiki/oil");
+			player.addChatMessage(IChatComponent.Serializer.func_150699_a("[{\"text\":\"" + GCCoreUtil.translate("gui.message.help3") + ": \",\"color\":\"white\"}," + "{\"text\":\" " + EnumColor.BRIGHT_GREEN + "wiki."+GalacticraftCore.PREFIX+"com/wiki/oil" + "\"," + "\"color\":\"green\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":" + "{\"text\":\""+ GCCoreUtil.translate("gui.message.clicklink") +"\",\"color\":\"yellow\"}}," + "\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://wiki."+GalacticraftCore.PREFIX+"com/wiki/oil" + "\"}}]"));
 			break;
 		case 8:
-			sendChat(player, GCCoreUtil.translate("gui.message.prelaunch")+": www."+GalacticraftCore.PREFIX+"com/wiki/pre");
+			player.addChatMessage(IChatComponent.Serializer.func_150699_a("[{\"text\":\"" + GCCoreUtil.translate("gui.message.prelaunch") + ": \",\"color\":\"white\"}," + "{\"text\":\" " + EnumColor.BRIGHT_GREEN + "wiki."+GalacticraftCore.PREFIX+"com/wiki/pre" + "\"," + "\"color\":\"green\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":" + "{\"text\":\""+ GCCoreUtil.translate("gui.message.clicklink") +"\",\"color\":\"yellow\"}}," + "\"clickEvent\":{\"action\":\"open_url\",\"value\":\"" + "http://wiki."+GalacticraftCore.PREFIX+"com/wiki/pre" + "\"}}]"));
 			break;
 		}
-	}
-
-	private void sendChat(EntityPlayerSP player, String string)
-	{
-		player.addChatMessage(new ChatComponentText(string));
 	}
 }

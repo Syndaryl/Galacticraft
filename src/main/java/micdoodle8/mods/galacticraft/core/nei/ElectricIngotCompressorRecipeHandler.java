@@ -19,6 +19,7 @@ public class ElectricIngotCompressorRecipeHandler extends TemplateRecipeHandler
 {
     private static final ResourceLocation ingotCompressorTexture = new ResourceLocation(GalacticraftCore.ASSET_PREFIX, "textures/gui/electric_IngotCompressor.png");
     public static int ticksPassed;
+    private int alternate = 0;
 
     public String getRecipeId()
     {
@@ -41,7 +42,10 @@ public class ElectricIngotCompressorRecipeHandler extends TemplateRecipeHandler
 
             for (Map.Entry<Integer, PositionedStack> input : stack.getKey().entrySet())
             {
-                inputStacks.add(input.getValue());
+                PositionedStack inputItem = input.getValue().copy();
+                //TODO  Find a way to draw 2 of each input item
+                inputItem.item.stackSize = 2;
+            	inputStacks.add(inputItem);
             }
 
             recipes.put(inputStacks, stack.getValue());
@@ -68,7 +72,8 @@ public class ElectricIngotCompressorRecipeHandler extends TemplateRecipeHandler
     @Override
     public void onUpdate()
     {
-        ElectricIngotCompressorRecipeHandler.ticksPassed += 1;
+        ElectricIngotCompressorRecipeHandler.ticksPassed += 1 + this.alternate;
+        this.alternate = 1 - this.alternate;
         super.onUpdate();
     }
 

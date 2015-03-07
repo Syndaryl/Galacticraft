@@ -9,6 +9,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
@@ -20,9 +22,8 @@ import java.util.Random;
 
 /**
  * Metadata: 3 = Tin Decoration Block 1 4 = Tin Decoration Block 2 5 = Copper
- * Ore 6 = Tin Ore 7 = Aluminium Ore 8 = Silicon Ore 9 = Copper Decoration Block
- * [unused] 10 = Tin Decoration Block [unused] 11 = Aluminium Decoration Block
- * [unused]
+ * Ore 6 = Tin Ore 7 = Aluminium Ore 8 = Silicon Ore 9 = Copper Block
+ * 10 = Tin Block  11 = Aluminium Block  12 = Meteoric Iron Block
  */
 public class BlockBasic extends Block implements IDetectableResource
 {
@@ -33,6 +34,7 @@ public class BlockBasic extends Block implements IDetectableResource
     {
         super(Material.rock);
         this.setHardness(1.0F);
+        this.blockResistance = 15F;
         this.setBlockTextureName(GalacticraftCore.TEXTURE_PREFIX + assetName);
         this.setBlockName(assetName);
     }
@@ -46,7 +48,7 @@ public class BlockBasic extends Block implements IDetectableResource
     @Override
     public void registerBlockIcons(IIconRegister iconRegister)
     {
-        this.iconBuffer = new IIcon[11];
+        this.iconBuffer = new IIcon[12];
         this.iconBuffer[0] = iconRegister.registerIcon(GalacticraftCore.TEXTURE_PREFIX + "deco_aluminium_2");
         this.iconBuffer[1] = iconRegister.registerIcon(GalacticraftCore.TEXTURE_PREFIX + "deco_aluminium_4");
         this.iconBuffer[2] = iconRegister.registerIcon(GalacticraftCore.TEXTURE_PREFIX + "deco_aluminium_1");
@@ -58,6 +60,7 @@ public class BlockBasic extends Block implements IDetectableResource
         this.iconBuffer[8] = iconRegister.registerIcon(GalacticraftCore.TEXTURE_PREFIX + "deco_copper_block");
         this.iconBuffer[9] = iconRegister.registerIcon(GalacticraftCore.TEXTURE_PREFIX + "deco_tin_block");
         this.iconBuffer[10] = iconRegister.registerIcon(GalacticraftCore.TEXTURE_PREFIX + "deco_aluminium_block");
+        this.iconBuffer[11] = iconRegister.registerIcon(GalacticraftCore.TEXTURE_PREFIX + "deco_meteoriron_block");
     }
 
     @Override
@@ -91,6 +94,8 @@ public class BlockBasic extends Block implements IDetectableResource
             return this.iconBuffer[9];
         case 11:
             return this.iconBuffer[10];
+        case 12:
+            return this.iconBuffer[11];
         default:
             return meta < this.iconBuffer.length ? this.iconBuffer[meta] : this.iconBuffer[0];
         }
@@ -141,6 +146,30 @@ public class BlockBasic extends Block implements IDetectableResource
     }
 
     @Override
+    public float getExplosionResistance(Entity par1Entity, World world, int x, int y, int z, double explosionX, double explosionY, double explosionZ)
+    {
+    	int metadata = world.getBlockMetadata(x, y, z); 
+
+    	if (metadata < 5)
+        {
+            return 2.0F;
+            //Decoration blocks are soft, like cauldrons or wood 
+        }
+    	else if (metadata == 12)
+        {
+            return 8.0F;
+            //Meteoric Iron is tougher than diamond
+        }
+    	else if (metadata > 8)
+        {
+            return 6.0F;
+            //Blocks of metal are tough - like diamond blocks in vanilla
+        }
+
+        return this.blockResistance / 5.0F;
+    }
+
+    @Override
     public float getBlockHardness(World par1World, int par2, int par3, int par4)
     {
         final int meta = par1World.getBlockMetadata(par2, par3, par4);
@@ -168,7 +197,7 @@ public class BlockBasic extends Block implements IDetectableResource
     @Override
     public void getSubBlocks(Item par1, CreativeTabs par2CreativeTabs, List par3List)
     {
-        for (int var4 = 3; var4 < 12; ++var4)
+        for (int var4 = 3; var4 < 13; ++var4)
         {
             par3List.add(new ItemStack(par1, 1, var4));
         }

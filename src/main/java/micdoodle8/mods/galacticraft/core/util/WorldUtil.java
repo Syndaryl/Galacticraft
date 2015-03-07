@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import micdoodle8.mods.galacticraft.api.GalacticraftRegistry;
@@ -15,14 +16,12 @@ import micdoodle8.mods.galacticraft.api.prefab.entity.EntitySpaceshipBase;
 import micdoodle8.mods.galacticraft.api.recipe.SpaceStationRecipe;
 import micdoodle8.mods.galacticraft.api.vector.BlockVec3;
 import micdoodle8.mods.galacticraft.api.vector.Vector3;
-import micdoodle8.mods.galacticraft.api.world.IGalacticraftWorldProvider;
-import micdoodle8.mods.galacticraft.api.world.IOrbitDimension;
-import micdoodle8.mods.galacticraft.api.world.ITeleportType;
-import micdoodle8.mods.galacticraft.api.world.SpaceStationType;
+import micdoodle8.mods.galacticraft.api.world.*;
 import micdoodle8.mods.galacticraft.core.GalacticraftCore;
 import micdoodle8.mods.galacticraft.core.dimension.SpaceStationWorldData;
 import micdoodle8.mods.galacticraft.core.dimension.WorldProviderMoon;
 import micdoodle8.mods.galacticraft.core.dimension.WorldProviderOrbit;
+import micdoodle8.mods.galacticraft.core.entities.EntityArrowGC;
 import micdoodle8.mods.galacticraft.core.entities.EntityCelestialFake;
 import micdoodle8.mods.galacticraft.core.entities.player.GCPlayerHandler;
 import micdoodle8.mods.galacticraft.core.entities.player.GCPlayerStats;
@@ -30,6 +29,7 @@ import micdoodle8.mods.galacticraft.core.items.ItemParaChute;
 import micdoodle8.mods.galacticraft.core.network.PacketSimple;
 import micdoodle8.mods.galacticraft.core.network.PacketSimple.EnumSimplePacket;
 import micdoodle8.mods.galacticraft.core.tile.TileEntityTelemetry;
+import micdoodle8.mods.galacticraft.planets.asteroids.entities.EntityAstroMiner;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
@@ -38,27 +38,40 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.S07PacketRespawn;
 import net.minecraft.network.play.server.S1DPacketEntityEffect;
+import net.minecraft.network.play.server.S1FPacketSetExperience;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.*;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
+
+//import micdoodle8.mods.galacticraft.planets.asteroids.entities.EntityAstroMiner;
 
 public class WorldUtil
 {
     public static List<Integer> registeredSpaceStations;
     public static List<Integer> registeredPlanets;
+    private static IWorldGenerator generatorGCGreg = null;
+    private static IWorldGenerator generatorCoFH = null;
+    private static IWorldGenerator generatorDenseOres = null;
+    private static IWorldGenerator generatorTCAuraNodes = null;
+    private static Method generateTCAuraNodes = null;
+    private static boolean generatorsInitialised = false;
 	
     public static double getGravityForEntity(Entity entity)
     {
@@ -66,6 +79,10 @@ public class WorldUtil
         {
             final IGalacticraftWorldProvider customProvider = (IGalacticraftWorldProvider) entity.worldObj.provider;
             return 0.08D - customProvider.getGravity();
+        }
+        else if (GalacticraftCore.isPlanetsLoaded && entity instanceof EntityAstroMiner)
+        {
+        	return 0;
         }
         else
         {
@@ -88,12 +105,23 @@ public class WorldUtil
 
     public static boolean shouldRenderFire(Entity entity)
     {
-        if (!(entity instanceof EntityLivingBase))
+        if (entity.worldObj == null || !(entity.worldObj.provider instanceof IGalacticraftWorldProvider)) return entity.isBurning();
+
+    	if (!(entity instanceof EntityLivingBase) && !(entity instanceof EntityArrow) && !(entity instanceof EntityArrowGC))
         {
-            return entity.isBurning();
+    		return entity.isBurning();
         }
 
-        return !(entity.worldObj.provider instanceof IGalacticraftWorldProvider) && entity.isBurning();
+    	if (entity.isBurning())
+    	{
+	        if (OxygenUtil.noAtmosphericCombustion(entity.worldObj.provider))
+	        	return OxygenUtil.isAABBInBreathableAirBlock(entity.worldObj, entity.boundingBox);
+	        else
+	        	return true;
+	        //Disable fire on Galacticraft worlds with no oxygen
+    	}
+    	
+        return false;
     }
 
     public static Vector3 getWorldColor(World world)
@@ -709,7 +737,7 @@ public class WorldUtil
                     player.playerNetServerHandler.sendPacket(new S1DPacketEntityEffect(player.getEntityId(), var10));
                 }
 
-                //	player.playerNetServerHandler.sendPacketToPlayer(new Packet43Experience(player.experience, player.experienceTotal, player.experienceLevel));
+                player.playerNetServerHandler.sendPacket(new S1FPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
             }
             else
             //Non-player entity transfer i.e. it's an EntityCargoRocket
@@ -929,9 +957,114 @@ public class WorldUtil
         return objList;
     }
 
-    public static boolean otherModPreventGenerate(World world)
+    public static boolean otherModPreventGenerate(int chunkX, int chunkZ, World world, IChunkProvider chunkGenerator, IChunkProvider chunkProvider)
     {
-        return (world.provider instanceof WorldProviderOrbit || (world.provider instanceof IGalacticraftWorldProvider && !ConfigManagerCore.enableOtherModsFeatures));
+        if (!(world.provider instanceof IGalacticraftWorldProvider)) return false;
+        if (world.provider instanceof WorldProviderOrbit) return true;
+        if (ConfigManagerCore.enableOtherModsFeatures) return false;
+        
+        if (!generatorsInitialised)
+        {
+        	generatorsInitialised = true;
+        			
+        	try {
+	        	Class GCGreg = Class.forName("bloodasp.galacticgreg.GT_Worldgenerator_Space");
+	        	if (GCGreg != null)
+	        	{
+		        	final Field regField = Class.forName("cpw.mods.fml.common.registry.GameRegistry").getDeclaredField("worldGenerators");
+		            regField.setAccessible(true);
+		        	Set<IWorldGenerator> registeredGenerators = (Set<IWorldGenerator>) regField.get(null);
+		        	for (IWorldGenerator gen : registeredGenerators)
+		        		if (GCGreg.isInstance(gen))
+		        		{
+		        			generatorGCGreg = gen;
+		        			break;
+		        		}
+	        	}
+	        } catch (Exception e) { }
+
+	        try {
+	        	Class cofh = Class.forName("cofh.core.world.WorldHandler");
+	        	if (cofh != null)
+	        	{
+		        	final Field regField = Class.forName("cpw.mods.fml.common.registry.GameRegistry").getDeclaredField("worldGenerators");
+		            regField.setAccessible(true);
+		        	Set<IWorldGenerator> registeredGenerators = (Set<IWorldGenerator>) regField.get(null);
+		        	for (IWorldGenerator gen : registeredGenerators)
+		        		if (cofh.isInstance(gen))
+		        		{
+		        			generatorCoFH = gen;
+		        			break;
+		        		}
+	        	}
+	        } catch (Exception e) { }
+
+	        try {
+	        	Class denseOres = Class.forName("com.rwtema.denseores.WorldGenOres");
+	        	if (denseOres != null)
+	        	{
+		        	final Field regField = Class.forName("cpw.mods.fml.common.registry.GameRegistry").getDeclaredField("worldGenerators");
+		            regField.setAccessible(true);
+		        	Set<IWorldGenerator> registeredGenerators = (Set<IWorldGenerator>) regField.get(null);
+		        	for (IWorldGenerator gen : registeredGenerators)
+		        		if (denseOres.isInstance(gen))
+		        		{
+		        			generatorDenseOres = gen;
+		        			break;
+		        		}
+	        	}
+
+	        } catch (Exception e) { }
+	        
+	        try {
+	        	Class genThaumCraft = Class.forName("thaumcraft.common.lib.world.ThaumcraftWorldGenerator");
+	        	if (genThaumCraft != null)
+	        	{
+		        	final Field regField = Class.forName("cpw.mods.fml.common.registry.GameRegistry").getDeclaredField("worldGenerators");
+		            regField.setAccessible(true);
+		        	Set<IWorldGenerator> registeredGenerators = (Set<IWorldGenerator>) regField.get(null);
+		        	for (IWorldGenerator gen : registeredGenerators)
+		        		if (genThaumCraft.isInstance(gen))
+		        		{
+		        			generatorTCAuraNodes = gen;
+		        			break;
+		        		}
+		        	if (generatorTCAuraNodes != null && ConfigManagerCore.enableThaumCraftNodes)
+		        	{
+		        		generateTCAuraNodes = genThaumCraft.getDeclaredMethod("generateWildNodes", World.class, Random.class, int.class, int.class, boolean.class, boolean.class);
+		        		generateTCAuraNodes.setAccessible(true);
+		        	}
+	        	}
+
+	        } catch (Exception e) { }
+	        
+	        if (generatorGCGreg != null) System.out.println("Whitelisting GalacticGreg oregen on planets.");
+	        if (generatorCoFH != null) System.out.println("Whitelisting CoFHCore custom oregen on planets.");
+	        if (generatorDenseOres != null) System.out.println("Whitelisting Dense Ores oregen on planets.");
+	        if (generatorTCAuraNodes != null && generateTCAuraNodes != null) System.out.println("Whitelisting ThaumCraft aura node generation on planets.");
+        }
+
+        if (generatorGCGreg != null || generatorCoFH != null || generatorDenseOres != null || generatorTCAuraNodes != null)
+        {
+        	try {
+	            long worldSeed = world.getSeed();
+	            Random fmlRandom = new Random(worldSeed);
+	            long xSeed = fmlRandom.nextLong() >> 2 + 1L;
+	            long zSeed = fmlRandom.nextLong() >> 2 + 1L;
+	            long chunkSeed = (xSeed * chunkX + zSeed * chunkZ) ^ worldSeed;
+	            fmlRandom.setSeed(chunkSeed);
+	            
+	            if (generatorCoFH != null) generatorCoFH.generate(fmlRandom, chunkX, chunkZ, world, chunkGenerator, chunkProvider);
+	            if (generatorDenseOres != null) generatorDenseOres.generate(fmlRandom, chunkX, chunkZ, world, chunkGenerator, chunkProvider);
+	            if (generatorGCGreg != null) generatorGCGreg.generate(fmlRandom, chunkX, chunkZ, world, chunkGenerator, chunkProvider);
+	            if (generateTCAuraNodes != null)
+	            {
+            		generateTCAuraNodes.invoke(generatorTCAuraNodes, world, fmlRandom, chunkX, chunkZ, false, true);	            		
+	            }
+	            
+	        } catch (Exception e) { e.printStackTrace(); }
+        }
+        return true;
     }
 
     public static void toCelestialSelection(EntityPlayerMP player, GCPlayerStats stats, int tier)

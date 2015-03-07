@@ -14,6 +14,7 @@ import micdoodle8.mods.galacticraft.core.energy.grid.EnergyNetwork;
 import micdoodle8.mods.miccore.Annotations.RuntimeInterface;
 import micdoodle8.mods.miccore.Annotations.VersionSpecific;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -160,7 +161,7 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
         if (this.IC2surplusJoules < 0.001F)
         {
             this.IC2surplusJoules = 0F;
-            float result = this.getNetwork().getRequest(this) * EnergyConfigHandler.TO_IC2_RATIO;
+            float result = this.getNetwork().getRequest(this) / EnergyConfigHandler.IC2_RATIO;
             //Cap energy which IC2 can put into Alu Wire at 128 EU/t for regular, 256 EU/t for heavy
             result = Math.max(((EnergyNetwork) this.getNetwork()).networkTierGC == 2 ? 256F : 128F, result);
             return result;
@@ -170,7 +171,7 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
         if (this.IC2surplusJoules < 0.001F)
         {
             this.IC2surplusJoules = 0F;
-            float result = this.getNetwork().getRequest(this) * EnergyConfigHandler.TO_IC2_RATIO;
+            float result = this.getNetwork().getRequest(this) / EnergyConfigHandler.IC2_RATIO;
             //Cap energy which IC2 can put into Alu Wire at 128 EU/t for regular, 256 EU/t for heavy
             result = Math.max(((EnergyNetwork) this.getNetwork()).networkTierGC == 2 ? 256F : 128F, result);
             return result;
@@ -190,14 +191,14 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
         if (this.IC2surplusJoules < 0.001F)
         {
             this.IC2surplusJoules = 0F;
-            return this.getNetwork().getRequest(this) * EnergyConfigHandler.TO_IC2_RATIO;
+            return this.getNetwork().getRequest(this) / EnergyConfigHandler.IC2_RATIO;
         }
 
         this.IC2surplusJoules = this.getNetwork().produce(this.IC2surplusJoules, true, 1, this);
         if (this.IC2surplusJoules < 0.001F)
         {
             this.IC2surplusJoules = 0F;
-            return this.getNetwork().getRequest(this) * EnergyConfigHandler.TO_IC2_RATIO;
+            return this.getNetwork().getRequest(this) / EnergyConfigHandler.IC2_RATIO;
         }
         return 0D;
     }
@@ -321,7 +322,7 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
     /**
      * BuildCraft functions
      */
-    @RuntimeInterface(clazz = "buildcraft.api.power.IPowerReceptor", modID = "BuildCraft|Energy")
+    @RuntimeInterface(clazz = "buildcraft.api.power.IPowerReceptor", modID = "")
     public PowerReceiver getPowerReceiver(ForgeDirection side)
     {
         if (this.getNetwork() == null)
@@ -329,7 +330,7 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
             return null;
         }
 
-        double requiredEnergy = this.getNetwork().getRequest(this) * EnergyConfigHandler.TO_BC_RATIO;
+        double requiredEnergy = this.getNetwork().getRequest(this) / EnergyConfigHandler.BC3_RATIO;
         
         if (requiredEnergy <= 0.1D)
         {
@@ -342,7 +343,7 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
 
     public void reconfigureBC()
     {
-    	double requiredEnergy = this.getNetwork().getRequest(this) * EnergyConfigHandler.TO_BC_RATIO;
+    	double requiredEnergy = this.getNetwork().getRequest(this) / EnergyConfigHandler.BC3_RATIO;
         if (requiredEnergy <= 0.1D)
         {
         	requiredEnergy = 0;
@@ -350,7 +351,7 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
         ((PowerHandler) this.powerHandlerBC).configure(0, requiredEnergy, 0, requiredEnergy);
     }
 
-    @RuntimeInterface(clazz = "buildcraft.api.power.IPowerReceptor", modID = "EnderIO")
+    @RuntimeInterface(clazz = "buildcraft.api.power.IPowerReceptor", modID = "")
     public void doWork(PowerHandler workProvider)
     {
         PowerHandler handler = (PowerHandler) this.powerHandlerBC;
@@ -358,7 +359,7 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
         double energyBC = handler.getEnergyStored();
         if (energyBC > 0D)
         {
-            energyBC = this.getNetwork().produce((float) energyBC * EnergyConfigHandler.BC3_RATIO, true, 1, this) * EnergyConfigHandler.TO_BC_RATIO;
+            energyBC = this.getNetwork().produce((float) energyBC * EnergyConfigHandler.BC3_RATIO, true, 1, this) / EnergyConfigHandler.BC3_RATIO;
             if (energyBC < 0D)
             {
                 energyBC = 0D;
@@ -369,48 +370,60 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
         this.reconfigureBC();
     }
 
-    @RuntimeInterface(clazz = "buildcraft.api.power.IPowerReceptor", modID = "BuildCraft|Energy")
+    @RuntimeInterface(clazz = "buildcraft.api.power.IPowerReceptor", modID = "")
     public World getWorld()
     {
         return this.getWorldObj();
     }
 
-    //	@RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "ThermalExpansion")
-    //	public int receiveEnergy(ForgeDirection from, int maxReceive, boolean simulate)
-    //	{
-    //		ElectricityPack totalEnergyPack = ElectricityPack.getFromWatts(maxReceive * EnergyConfigHandler.TE_RATIO, 120);
-    //		float sent = (totalEnergyPack.getWatts() - ((IElectricityNetwork) this.getNetwork()).produce(totalEnergyPack, !simulate, this));
-    //		return MathHelper.floor_float(sent * EnergyConfigHandler.TO_TE_RATIO);
-    //	}
-    //
-    //	@RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "ThermalExpansion")
-    //	public int extractEnergy(ForgeDirection from, int maxExtract, boolean simulate)
-    //	{
-    //		return 0;
-    //	}
-    //
-    //	@RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "ThermalExpansion")
-    //	public boolean canInterface(ForgeDirection from)
-    //	{
-    //		return this.canConnect(from, NetworkType.POWER);
-    //	}
-    //
-    //	@RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "ThermalExpansion")
-    //	public int getEnergyStored(ForgeDirection from)
-    //	{
-    //		return 0;
-    //	}
-    //
-    //	@RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "ThermalExpansion")
-    //	public int getMaxEnergyStored(ForgeDirection from)
-    //	{
-    //		if (this.getNetwork() == null)
-    //		{
-    //			return 0;
-    //		}
-    //
-    //		return (int) Math.floor(((IElectricityNetwork) this.getNetwork()).getRequest(this).getWatts() * EnergyConfigHandler.TO_TE_RATIO);
-    //	}
+    @RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "")
+    public int receiveEnergy(ForgeDirection from, int maxReceive, boolean simulate)
+    {
+    	if (this.getNetwork() == null)
+    	{
+    		return 0;
+    	}
+        float receiveGC = maxReceive * EnergyConfigHandler.RF_RATIO;
+        float sentGC = receiveGC - this.getNetwork().produce(receiveGC, !simulate, 1, this);
+    	return MathHelper.floor_float(sentGC / EnergyConfigHandler.RF_RATIO);
+    }
+
+    @RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "")
+    public int extractEnergy(ForgeDirection from, int maxExtract, boolean simulate)
+    {
+    	return 0;
+    }
+
+    @RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "")
+    public boolean canConnectEnergy(ForgeDirection from)
+    {
+    	//Do not form wire-to-wire connections with EnderIO conduits
+    	TileEntity tile = new BlockVec3(this).getTileEntityOnSide(this.worldObj, from);
+        try {
+            if (EnergyUtil.clazzEnderIOCable != null && EnergyUtil.clazzEnderIOCable.isInstance(tile))
+            {
+                return false;
+            }
+        } catch (Exception e) { }
+    	return true;
+    }
+
+    @RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "")
+    public int getEnergyStored(ForgeDirection from)
+    {
+    	return 0;
+    }
+
+    @RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "")
+    public int getMaxEnergyStored(ForgeDirection from)
+    {
+    	if (this.getNetwork() == null)
+    	{
+    		return 0;
+    	}
+
+    	return MathHelper.floor_float(this.getNetwork().getRequest(this) / EnergyConfigHandler.RF_RATIO);
+    }
 
     @RuntimeInterface(clazz = "mekanism.api.energy.IStrictEnergyAcceptor", modID = "Mekanism")
     public double transferEnergyToAcceptor(ForgeDirection side, double amount)
@@ -420,7 +433,7 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
             return 0;
         }
 
-        return amount - this.getNetwork().produce((float) amount * EnergyConfigHandler.MEKANISM_RATIO, true, 1, this) * EnergyConfigHandler.TO_MEKANISM_RATIO;
+        return amount - this.getNetwork().produce((float) amount * EnergyConfigHandler.MEKANISM_RATIO, true, 1, this) / EnergyConfigHandler.MEKANISM_RATIO;
     }
 
     @RuntimeInterface(clazz = "mekanism.api.energy.IStrictEnergyAcceptor", modID = "Mekanism")
@@ -466,6 +479,6 @@ public abstract class TileBaseUniversalConductor extends TileBaseConductor
         {
             return 0;
         }
-        return this.getNetwork().getRequest(this) * EnergyConfigHandler.TO_MEKANISM_RATIO;
+        return this.getNetwork().getRequest(this) / EnergyConfigHandler.MEKANISM_RATIO;
     }
 }

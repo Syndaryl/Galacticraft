@@ -42,7 +42,9 @@ public class RecipeManagerMars
         //Water Electrolyzer
         RecipeUtil.addRecipe(new ItemStack(MarsBlocks.machineT2, 1, 8), new Object[] { "TVT", "FWF", "BXB", 'T', GCItems.oxTankHeavy, 'V', GCItems.oxygenVent, 'F', new ItemStack(GCBlocks.oxygenPipe, 1, 0), 'X', new ItemStack(GCItems.basicItem, 1, 10), 'W', new ItemStack(MarsItems.marsItemBasic, 1, 6), 'B', new ItemStack(GCItems.basicItem, 1, 6) });
         //Fluid Manipulator - crafting item
-        RecipeUtil.addRecipe(new ItemStack(MarsItems.marsItemBasic, 1, 6), new Object[] { "MXM", "SWS", "MXM", 'S', Items.slime_ball, 'X', GCItems.oxygenFan, 'M', new ItemStack(GCItems.meteoricIronIngot, 1, 0), 'W', new ItemStack(GCItems.basicItem, 1, 14) });
+        RecipeUtil.addRecipe(new ItemStack(MarsItems.marsItemBasic, 1, 6), new Object[] { "MXM", "SWS", "MXM", 'S', Items.slime_ball, 'X', GCItems.oxygenFan, 'M', "ingotMeteoricIron", 'W', new ItemStack(GCItems.basicItem, 1, 14) });
+
+        RecipeUtil.addRecipe(new ItemStack(MarsBlocks.hydrogenPipe, 6, 0), new Object[] { "CCC", "   ", "CCC", 'C', "ingotCopper" });
 
         RecipeUtil.addRecipe(new ItemStack(MarsItems.marsItemBasic, 1, 1), new Object[] { "X", "X", 'X', "ingotDesh" });
 
@@ -89,8 +91,6 @@ public class RecipeManagerMars
         CraftingManager.getInstance().addShapelessRecipe(new ItemStack(MarsItems.carbonFragments, 8, 0), new ItemStack(Items.coal, 1, 0));
 
         CraftingManager.getInstance().addShapelessRecipe(new ItemStack(MarsItems.carbonFragments, 4, 0), new ItemStack(Items.coal, 1, 1));
-
-        CraftingManager.getInstance().addShapelessRecipe(new ItemStack(MarsItems.carbonFragments, 64, 0), new ItemStack(Blocks.coal_block, 1, 0));
 
         // Smelting
         FurnaceRecipes.smelting().func_151394_a(new ItemStack(MarsItems.marsItemBasic, 1, 0), new ItemStack(MarsItems.marsItemBasic, 1, 2), 0.2F);

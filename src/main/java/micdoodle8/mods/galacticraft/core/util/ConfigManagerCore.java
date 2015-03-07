@@ -1,7 +1,6 @@
 package micdoodle8.mods.galacticraft.core.util;
 
 import com.google.common.primitives.Ints;
-
 import cpw.mods.fml.client.config.IConfigElement;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.registry.GameData;
@@ -9,6 +8,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import micdoodle8.mods.galacticraft.api.vector.BlockTuple;
 import micdoodle8.mods.galacticraft.core.Constants;
+import micdoodle8.mods.galacticraft.core.energy.EnergyConfigHandler;
 import micdoodle8.mods.galacticraft.core.tick.TickHandlerClient;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -31,6 +31,7 @@ public class ConfigManagerCore
     public static int idDimensionOverworldOrbit;
     public static int idDimensionOverworldOrbitStatic;
     public static int idDimensionMoon;
+    public static int biomeIDbase = 102;
 
     // SCHEMATICS
     public static int idSchematicRocketT1;
@@ -39,22 +40,6 @@ public class ConfigManagerCore
 
     // ACHIEVEMENTS
     public static int idAchievBase;
-
-    public static int idEntityEvolvedSpider;
-    public static int idEntityEvolvedCreeper;
-    public static int idEntityEvolvedZombie;
-    public static int idEntityEvolvedSkeleton;
-    public static int idEntityEvolvedSkeletonBoss;
-    public static int idEntitySpaceship;
-    public static int idEntityMeteor;
-    public static int idEntityBuggy;
-    public static int idEntityFlag;
-    public static int idEntityParaChest;
-    public static int idEntityAlienVillager;
-    public static int idEntityOxygenBubble;
-    public static int idEntityLander;
-    public static int idEntityMeteorChunk;
-	public static int idEntityCelestial;
 
     // GENERAL
     public static boolean moreStars;
@@ -73,6 +58,7 @@ public class ConfigManagerCore
     public static boolean disableLander;
     public static double dungeonBossHealthMod;
     public static boolean hardMode;
+    public static boolean quickMode;
     public static int suffocationCooldown;
     public static int suffocationDamage;
     public static int[] externalOilGen;
@@ -89,6 +75,7 @@ public class ConfigManagerCore
     public static boolean disableCopperMoon;
     public static boolean disableMoonVillageGen;
     public static boolean enableOtherModsFeatures;
+	public static boolean enableThaumCraftNodes;
     public static boolean enableSealerEdgeChecks;
     public static boolean alternateCanisterRecipe;
     public static boolean disableRocketsToOverworld;
@@ -134,6 +121,13 @@ public class ConfigManagerCore
             prop.comment = "Dimension ID for Static Overworld Space Stations";
             prop.setLanguageKey("gc.configgui.idDimensionOverworldOrbitStatic").setRequiresMcRestart(true);
             idDimensionOverworldOrbitStatic = prop.getInt();
+            propOrder.add(prop.getName());
+
+            prop = config.get(Constants.CONFIG_CATEGORY_DIMENSIONS, "biomeIDBase", 102);
+            prop.comment = "Biome ID for Moon (Mars will be this + 1, Asteroids + 2 etc). Allowed range 40-250.";
+            prop.setLanguageKey("gc.configgui.biomeIDBase").setRequiresMcRestart(true);
+            biomeIDbase = prop.getInt();
+            if (biomeIDbase < 40 || biomeIDbase > 250) biomeIDbase = 102;
             propOrder.add(prop.getName());
 
             prop = config.get(Constants.CONFIG_CATEGORY_DIMENSIONS, "Static Loaded Dimensions", ConfigManagerCore.staticLoadDimensions);
@@ -186,98 +180,6 @@ public class ConfigManagerCore
             prop.comment = "Base Achievement ID. All achievement IDs will start at this number.";
             prop.setLanguageKey("gc.configgui.idAchievBase");
             idAchievBase = prop.getInt(1784);
-            propOrder.add(prop.getName());
-
-            //
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityEvolvedSpider", 155);
-            prop.comment = "Entity ID for Evolved Spider, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityEvolvedSpider").setRequiresMcRestart(true);
-            idEntityEvolvedSpider = prop.getInt(155);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityEvolvedCreeper", 156);
-            prop.comment = "Entity ID for Evolved Creeper, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityEvolvedCreeper").setRequiresMcRestart(true);
-            idEntityEvolvedCreeper = prop.getInt(156);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityEvolvedZombie", 157);
-            prop.comment = "Entity ID for Evolved Zombie, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityEvolvedZombie").setRequiresMcRestart(true);
-            idEntityEvolvedZombie = prop.getInt(157);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityEvolvedSkeleton", 158);
-            prop.comment = "Entity ID for Evolved Skeleton, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityEvolvedSkeleton").setRequiresMcRestart(true);
-            idEntityEvolvedSkeleton = prop.getInt(158);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntitySpaceship", 159);
-            prop.comment = "Entity ID for Tier 1 Rocket, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntitySpaceship").setRequiresMcRestart(true);
-            idEntitySpaceship = prop.getInt(159);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityMeteor", 161);
-            prop.comment = "Entity ID for Meteor, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityMeteor").setRequiresMcRestart(true);
-            idEntityMeteor = prop.getInt(161);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityBuggy", 162);
-            prop.comment = "Entity ID for Buggy, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityBuggy").setRequiresMcRestart(true);
-            idEntityBuggy = prop.getInt(162);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityFlag", 163);
-            prop.comment = "Entity ID for Flag Entity, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityFlag").setRequiresMcRestart(true);
-            idEntityFlag = prop.getInt(163);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityParaChest", 165);
-            prop.comment = "Entity ID for Parachest, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityParaChest").setRequiresMcRestart(true);
-            idEntityParaChest = prop.getInt(165);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityAlienVillager", 166);
-            prop.comment = "Entity ID for Alien Villager, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityAlienVillager").setRequiresMcRestart(true);
-            idEntityAlienVillager = prop.getInt(166);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityOxygenBubble", 167);
-            prop.comment = "Entity ID for Oxygen Bubble, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityOxygenBubble").setRequiresMcRestart(true);
-            idEntityOxygenBubble = prop.getInt(167);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityLander", 168);
-            prop.comment = "Entity ID for Moon Lander, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityLander").setRequiresMcRestart(true);
-            idEntityLander = prop.getInt(168);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityEvolvedSkeletonBoss", 170);
-            prop.comment = "Entity ID for Skeleton Boss, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityEvolvedSkeletonBoss").setRequiresMcRestart(true);
-            idEntityEvolvedSkeletonBoss = prop.getInt(170);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityCelestialScreen", 184);
-            prop.comment = "Entity ID for (hidden) Celestial Selection Entity, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityCelestialScreen").setRequiresMcRestart(true);
-            idEntityCelestial = prop.getInt(184);
-            propOrder.add(prop.getName());
-
-            prop = config.get(Constants.CONFIG_CATEGORY_ENTITIES, "idEntityMeteorChunk", 179);
-            prop.comment = "Entity ID for Throwable Meteor Chunk, must be unique.";
-            prop.setLanguageKey("gc.configgui.idEntityMeteorChunk").setRequiresMcRestart(true);
-            idEntityMeteorChunk = prop.getInt(179);
             propOrder.add(prop.getName());
 
 //Client side
@@ -369,9 +271,15 @@ public class ConfigManagerCore
             propOrder.add(prop.getName());
 
             prop = config.get(Constants.CONFIG_CATEGORY_GENERAL, "Generate other mods features on planets", false);
-            prop.comment = "If this is enabled, other mods' ores and all other features (eg. plants) can generate on the Moon and planets.";
+            prop.comment = "If this is enabled, other mods' standard ores and all other features (eg. plants) can generate on the Moon and planets. Apart from looking wrong, this make cause 'Already Decorating!' type crashes.  NOT RECOMMENDED!  See Wiki.";
             prop.setLanguageKey("gc.configgui.enableOtherModsFeatures");
             enableOtherModsFeatures = prop.getBoolean(false);
+            propOrder.add(prop.getName());
+
+            prop = config.get(Constants.CONFIG_CATEGORY_GENERAL, "Generate ThaumCraft wild nodes on planetary surfaces", true);
+            prop.comment = "If ThaumCraft is installed, ThaumCraft wild nodes can generate on the Moon and planets.";
+            prop.setLanguageKey("gc.configgui.enableThaumCraftNodes");
+            enableThaumCraftNodes = prop.getBoolean(true);
             propOrder.add(prop.getName());
 
             prop = config.get(Constants.CONFIG_CATEGORY_GENERAL, "Other mods ores for GC to generate on the Moon and planets", new String [] { });
@@ -467,6 +375,12 @@ public class ConfigManagerCore
             prop.comment = "Set this to true for increased difficulty in modpacks (see forum for more info).";
             prop.setLanguageKey("gc.configgui.hardMode");
             hardMode = prop.getBoolean(false);
+            propOrder.add(prop.getName());
+
+            prop = config.get(Constants.CONFIG_CATEGORY_GENERAL, "Quick Game Mode", false);
+            prop.comment = "Set this to true for less metal use in Galacticraft recipes (makes the game easier).";
+            prop.setLanguageKey("gc.configgui.quickMode");
+            quickMode = prop.getBoolean(false);
             propOrder.add(prop.getName());
 
             prop = config.get(Constants.CONFIG_CATEGORY_GENERAL, "Enable Sealed edge checks", true);
@@ -642,13 +556,16 @@ public class ConfigManagerCore
     public static List<Object> getServerConfigOverride()
     {
     	ArrayList<Object> returnList = new ArrayList();
-    	returnList.add(ConfigManagerCore.hardMode);
+    	int modeFlags = ConfigManagerCore.hardMode ? 1 : 0;
+    	modeFlags += ConfigManagerCore.quickMode ? 2 : 0;
+    	returnList.add(modeFlags);
     	returnList.add(ConfigManagerCore.dungeonBossHealthMod);
     	returnList.add(ConfigManagerCore.suffocationDamage);
     	returnList.add(ConfigManagerCore.suffocationCooldown);
     	returnList.add(ConfigManagerCore.rocketFuelFactor);
-    	returnList.add(ConfigManagerCore.detectableIDs.clone());
+    	EnergyConfigHandler.serverConfigOverride(returnList);
     	
+    	returnList.add(ConfigManagerCore.detectableIDs.clone());  	
     	//TODO Should this include any other client-side configurables too?
     	//If changing this, update definition of EnumSimplePacket.C_UPDATE_CONFIGS
     	return returnList;
@@ -657,23 +574,28 @@ public class ConfigManagerCore
     @SideOnly(Side.CLIENT)
     public static void setConfigOverride(List<Object> configs)
     {
-    	ConfigManagerCore.hardMode = (Boolean) configs.get(0);
+    	int modeFlag = (Integer) configs.get(0);
+    	ConfigManagerCore.hardMode = (modeFlag & 1) > 0;
+    	ConfigManagerCore.quickMode = (modeFlag & 2) > 0;
     	ConfigManagerCore.dungeonBossHealthMod = (Double) configs.get(1);
     	ConfigManagerCore.suffocationDamage = (Integer) configs.get(2);
     	ConfigManagerCore.suffocationCooldown = (Integer) configs.get(3);
     	ConfigManagerCore.rocketFuelFactor = (Integer) configs.get(4);
-    	int sizeIDs = configs.size() - 5;
+    	
+    	EnergyConfigHandler.setConfigOverride((Float) configs.get(5), (Float) configs.get(6), (Float) configs.get(7), (Float) configs.get(8), (Integer) configs.get(9));
+    	
+    	int sizeIDs = configs.size() - 10;
     	if (sizeIDs > 0)
     	{
-    		if (configs.get(5) instanceof String)
+    		if (configs.get(10) instanceof String)
     		{
     			ConfigManagerCore.detectableIDs = new String[sizeIDs];
 		    	for (int j = 0; j < sizeIDs; j++)
-		    	ConfigManagerCore.detectableIDs[j] = new String((String) configs.get(5 + j));
+		    	ConfigManagerCore.detectableIDs[j] = new String((String) configs.get(10 + j));
     		}
-    		else if (configs.get(5) instanceof String[])
+    		else if (configs.get(10) instanceof String[])
     		{
-    			ConfigManagerCore.detectableIDs = ((String[])configs.get(5));
+    			ConfigManagerCore.detectableIDs = ((String[])configs.get(10));
     		}
         	TickHandlerClient.registerDetectableBlocks(false);
     	}

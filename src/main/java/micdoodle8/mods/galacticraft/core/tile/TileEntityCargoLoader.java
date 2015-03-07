@@ -91,9 +91,9 @@ public class TileEntityCargoLoader extends TileBaseElectricBlockWithInventory im
 
                 if (pad != null && pad instanceof TileEntityMulti)
                 {
-                    final TileEntity mainTile = ((TileEntityMulti) pad).mainBlockPosition.getTileEntity(this.worldObj);
+                   	final TileEntity mainTile = ((TileEntityMulti)pad).getMainBlockTile();
 
-                    if (mainTile != null && mainTile instanceof ICargoEntity)
+                    if (mainTile instanceof ICargoEntity)
                     {
                         this.attachedFuelable = (ICargoEntity) mainTile;
                         foundFuelable = true;
@@ -269,7 +269,10 @@ public class TileEntityCargoLoader extends TileBaseElectricBlockWithInventory im
 
             if (stackAt != null)
             {
-                if (doRemove && --this.containingItems[i].stackSize <= 0)
+                ItemStack resultStack = stackAt.copy();
+                resultStack.stackSize = 1;
+
+                if (doRemove && --stackAt.stackSize <= 0)
                 {
                     this.containingItems[i] = null;
                 }
@@ -278,8 +281,7 @@ public class TileEntityCargoLoader extends TileBaseElectricBlockWithInventory im
                 {
                     this.markDirty();
                 }
-                ItemStack resultStack = stackAt.copy();
-                resultStack.stackSize = 1;
+
                 return new RemovalResult(EnumCargoLoadingState.SUCCESS, resultStack);
             }
         }

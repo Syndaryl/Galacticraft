@@ -1,6 +1,7 @@
 package micdoodle8.mods.galacticraft.planets.mars.client;
 
 import cpw.mods.fml.client.FMLClientHandler;
+import micdoodle8.mods.galacticraft.api.world.IGalacticraftWorldProvider;
 import micdoodle8.mods.galacticraft.core.GalacticraftCore;
 import micdoodle8.mods.galacticraft.core.util.ConfigManagerCore;
 import net.minecraft.client.Minecraft;
@@ -33,10 +34,13 @@ public class SkyProviderMars extends IRenderHandler
     public int starList;
     public int glSkyList;
     public int glSkyList2;
+    private float sunSize;
 
-    public SkyProviderMars()
+    public SkyProviderMars(IGalacticraftWorldProvider marsProvider)
     {
-        int displayLists = GLAllocation.generateDisplayLists(3);
+        this.sunSize = 17.5F * marsProvider.getSolarSize();
+        
+    	int displayLists = GLAllocation.generateDisplayLists(3);
         this.starList = displayLists;
         this.glSkyList = displayLists + 1;
         this.glSkyList2 = displayLists + 2;
@@ -209,7 +213,7 @@ public class SkyProviderMars extends IRenderHandler
         GL11.glRotatef(-90.0F, 0.0F, 1.0F, 0.0F);
         GL11.glRotatef(world.getCelestialAngle(partialTicks) * 360.0F, 1.0F, 0.0F, 0.0F);
         // Render sun
-        f10 = 14.0F;
+        f10 = this.sunSize;
         mc.renderEngine.bindTexture(SkyProviderMars.sunTexture);
         tessellator1.startDrawingQuads();
         tessellator1.addVertexWithUV(-f10, 100.0D, -f10, 0.0D, 0.0D);

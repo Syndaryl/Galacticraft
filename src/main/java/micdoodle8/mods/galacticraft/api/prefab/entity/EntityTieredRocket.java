@@ -1,7 +1,6 @@
 package micdoodle8.mods.galacticraft.api.prefab.entity;
 
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Loader;
 import io.netty.buffer.ByteBuf;
 import micdoodle8.mods.galacticraft.api.entity.ICameraZoomEntity;
 import micdoodle8.mods.galacticraft.api.entity.IDockable;
@@ -63,17 +62,18 @@ public abstract class EntityTieredRocket extends EntityAutoRocket implements IRo
     {
         super.entityInit();
 
-        if (Loader.isModLoaded("ICBM|Explosion"))
-        {
-            try
-            {
-                Class.forName("icbm.api.RadarRegistry").getMethod("register", Entity.class).invoke(null, this);
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-        }
+	//TODO reimplement once Resonant Engine comes out of alpha, bug DarkGuardsman for info
+        //if (Loader.isModLoaded("ICBM|Explosion"))
+        //{
+        //    try
+        //    {
+        //        Class.forName("icbm.api.RadarRegistry").getMethod("register", Entity.class).invoke(null, this);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        e.printStackTrace();
+        //    }
+        //}
     }
 
     @Override
@@ -81,17 +81,18 @@ public abstract class EntityTieredRocket extends EntityAutoRocket implements IRo
     {
         super.setDead();
 
-        if (Loader.isModLoaded("ICBM|Explosion"))
-        {
-            try
-            {
-                Class.forName("icbm.api.RadarRegistry").getMethod("unregister", Entity.class).invoke(null, this);
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-        }
+	//TODO reimplement once Resonant Engine comes out of alpha, bug Dark for info
+        //if (Loader.isModLoaded("ICBM|Explosion"))
+        //{
+        //    try
+        //    {
+        //        Class.forName("icbm.api.RadarRegistry").getMethod("unregister", Entity.class).invoke(null, this);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        e.printStackTrace();
+        //    }
+        //}
     }
 
     public void igniteCheckingCooldown()

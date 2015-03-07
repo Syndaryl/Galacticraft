@@ -31,6 +31,7 @@ import micdoodle8.mods.galacticraft.core.tick.TickHandlerServer;
 import micdoodle8.mods.galacticraft.core.tile.TileEntityTelemetry;
 import micdoodle8.mods.galacticraft.core.util.*;
 import micdoodle8.mods.galacticraft.core.wrappers.Footprint;
+import micdoodle8.mods.galacticraft.planets.asteroids.dimension.WorldProviderAsteroids;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -50,6 +51,7 @@ import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,7 +59,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GCPlayerHandler
 {
     private static final int OXYGENHEIGHTLIMIT = 450;
+    private boolean isClient = FMLCommonHandler.instance().getEffectiveSide().isClient();
 	private ConcurrentHashMap<UUID, GCPlayerStats> playerStatsMap = new ConcurrentHashMap<UUID, GCPlayerStats>();
+	private Field ftc;
 
     public ConcurrentHashMap<UUID, GCPlayerStats> getServerStatList()
     {
@@ -99,7 +103,7 @@ public class GCPlayerHandler
             GCPlayerStats.register((EntityPlayerMP) event.entity);
         }
 
-        if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
+        if (isClient)
         {
             this.onEntityConstructingClient(event);
         }
@@ -125,6 +129,10 @@ public class GCPlayerHandler
         GCPlayerStats stats = GCPlayerStats.get(player);
 
         GalacticraftCore.packetPipeline.sendTo(new PacketSimple(EnumSimplePacket.C_GET_CELESTIAL_BODY_LIST, new Object[] { }), player);
+        int repeatCount = stats.buildFlags >> 9;
+        if (repeatCount < 3)
+        	stats.buildFlags &= 1536;
+		GalacticraftCore.packetPipeline.sendTo(new PacketSimple(EnumSimplePacket.C_UPDATE_STATS, new Object[] { stats.buildFlags }), player);
     }
 
     private void onPlayerLogout(EntityPlayerMP player)
@@ -630,7 +638,7 @@ public class GCPlayerHandler
     protected void throwMeteors(EntityPlayerMP player)
     {
         World world = player.worldObj;
-        if (world.provider instanceof IGalacticraftWorldProvider && FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT)
+        if (world.provider instanceof IGalacticraftWorldProvider && !world.isRemote)
         {
             if (((IGalacticraftWorldProvider) world.provider).getMeteorFrequency() > 0)
             {
@@ -688,7 +696,7 @@ public class GCPlayerHandler
     protected void checkCurrentItem(EntityPlayerMP player)
     {
         ItemStack theCurrentItem = player.inventory.getCurrentItem();
-        boolean noAtmosphericCombustion = player.worldObj.provider instanceof IGalacticraftWorldProvider && (!((IGalacticraftWorldProvider) player.worldObj.provider).isGasPresent(IAtmosphericGas.OXYGEN) || ((IGalacticraftWorldProvider) player.worldObj.provider).isGasPresent(IAtmosphericGas.CO2));
+        boolean noAtmosphericCombustion = OxygenUtil.noAtmosphericCombustion(player.worldObj.provider);
         if (noAtmosphericCombustion && theCurrentItem != null)
         {
             final int var1 = theCurrentItem.stackSize;
@@ -1044,6 +1052,15 @@ public class GCPlayerHandler
             if (player.worldObj.provider instanceof WorldProviderOrbit)
             {
                 player.fallDistance = 0.0F;
+                try {
+                	if (ftc == null)
+                	{
+                		ftc = player.playerNetServerHandler.getClass().getField("floatingTickCount");
+            			ftc.setAccessible(true);
+                	}
+                	//Prevent kicks for flying
+					ftc.setInt(player.playerNetServerHandler, 0);
+				} catch (Exception e) { }
                 if (GCPlayer.newInOrbit)
                 {
                 	((WorldProviderOrbit) player.worldObj.provider).sendPacketsToClient(player);
@@ -1051,7 +1068,23 @@ public class GCPlayerHandler
                 }
             }
             else
+            {
             	GCPlayer.newInOrbit = true;
+            	
+                if (GalacticraftCore.isPlanetsLoaded && player.worldObj.provider instanceof WorldProviderAsteroids)
+                {
+                    player.fallDistance = 0.0F;
+                    try {
+                    	if (ftc == null)
+                    	{
+                    		ftc = player.playerNetServerHandler.getClass().getField("floatingTickCount");
+                			ftc.setAccessible(true);
+                    	}
+                    	//Prevent kicks for flying
+    					ftc.setInt(player.playerNetServerHandler, 0);
+    				} catch (Exception e) { }
+                }
+            }
         }
         else
         	GCPlayer.newInOrbit = true;
@@ -1098,7 +1131,7 @@ public class GCPlayerHandler
 
         this.updateSchematics(player, GCPlayer);
 
-        if (tick % 250 == 0 && GCPlayer.frequencyModuleInSlot == null && !GCPlayer.receivedSoundWarning && isInGCDimension && player.onGround && tick > 0)
+        if (tick % 250 == 0 && GCPlayer.frequencyModuleInSlot == null && !GCPlayer.receivedSoundWarning && isInGCDimension && player.onGround && tick > 0 && ((IGalacticraftWorldProvider)player.worldObj.provider).getSoundVolReductionAmount() > 1.0F)
         {
             player.addChatMessage(new ChatComponentText(EnumColor.YELLOW + GCCoreUtil.translate("gui.frequencymodule.warning0") + " " + EnumColor.AQUA + GCItems.basicItem.getItemStackDisplayName(new ItemStack(GCItems.basicItem, 1, 19)) + EnumColor.YELLOW + " " + GCCoreUtil.translate("gui.frequencymodule.warning1")));
             GCPlayer.receivedSoundWarning = true;

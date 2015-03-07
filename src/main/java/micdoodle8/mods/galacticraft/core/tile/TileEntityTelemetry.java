@@ -1,9 +1,5 @@
 package micdoodle8.mods.galacticraft.core.tile;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-
 import com.mojang.authlib.GameProfile;
 
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -17,6 +13,7 @@ import micdoodle8.mods.galacticraft.core.network.PacketSimple;
 import micdoodle8.mods.galacticraft.core.network.PacketSimple.EnumSimplePacket;
 import micdoodle8.mods.galacticraft.core.util.GCLog;
 import micdoodle8.mods.galacticraft.core.util.WorldUtil;
+import micdoodle8.mods.galacticraft.planets.asteroids.entities.EntityAstroMiner;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
@@ -27,6 +24,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldProvider;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
 
 public class TileEntityTelemetry extends TileEntity
 {   
@@ -129,6 +130,13 @@ public class TileEntityTelemetry extends TileEntity
 					data1 = (int) eShip.posY;
 					data3 = eShip.getScaledFuelLevel(100);
 					data4 = (int) eShip.rotationPitch;
+				}
+				else if (GalacticraftCore.isPlanetsLoaded && linkedEntity instanceof EntityAstroMiner)
+				{
+					EntityAstroMiner eShip = (EntityAstroMiner)linkedEntity; 
+					data1 = (int) eShip.posX;
+					data2 = (int) eShip.posZ;
+					data3 = eShip.energyLevel;
 				}
 			}
 			else

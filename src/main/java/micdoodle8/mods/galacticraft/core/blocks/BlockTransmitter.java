@@ -3,12 +3,14 @@ package micdoodle8.mods.galacticraft.core.blocks;
 import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import micdoodle8.mods.galacticraft.api.transmission.NetworkType;
 import micdoodle8.mods.galacticraft.api.transmission.tile.INetworkConnection;
+import micdoodle8.mods.galacticraft.api.transmission.tile.ITransmitter;
 import micdoodle8.mods.galacticraft.api.vector.Vector3;
 import micdoodle8.mods.galacticraft.core.GalacticraftCore;
 import micdoodle8.mods.galacticraft.core.energy.EnergyUtil;
 import micdoodle8.mods.galacticraft.core.network.PacketSimple;
 import micdoodle8.mods.galacticraft.core.network.PacketSimple.EnumSimplePacket;
 import micdoodle8.mods.galacticraft.core.util.OxygenUtil;
+import micdoodle8.mods.galacticraft.planets.mars.tile.TileEntityHydrogenPipe;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
@@ -71,14 +73,17 @@ public abstract class BlockTransmitter extends BlockContainer
     public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z)
     {
         TileEntity tileEntity = world.getTileEntity(x, y, z);
-        TileEntity[] connectable = new TileEntity[6];
 
-        if (tileEntity != null)
+        if (tileEntity instanceof ITransmitter)
         {
+            TileEntity[] connectable = new TileEntity[6];
             switch (this.getNetworkType())
             {
             case OXYGEN:
                 connectable = OxygenUtil.getAdjacentOxygenConnections(tileEntity);
+                break;
+            case HYDROGEN:
+                connectable = TileEntityHydrogenPipe.getAdjacentHydrogenConnections(tileEntity);
                 break;
             case POWER:
                 connectable = EnergyUtil.getAdjacentPowerConnections(tileEntity);
@@ -138,13 +143,16 @@ public abstract class BlockTransmitter extends BlockContainer
         super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, list, entity);
 
         TileEntity tileEntity = world.getTileEntity(x, y, z);
-        if (tileEntity != null)
+        if (tileEntity instanceof ITransmitter)
         {
             TileEntity[] connectable;
             switch (this.getNetworkType())
             {
             case OXYGEN:
                 connectable = OxygenUtil.getAdjacentOxygenConnections(tileEntity);
+                break;
+            case HYDROGEN:
+                connectable = TileEntityHydrogenPipe.getAdjacentHydrogenConnections(tileEntity);
                 break;
             case POWER:
                 connectable = EnergyUtil.getAdjacentPowerConnections(tileEntity);

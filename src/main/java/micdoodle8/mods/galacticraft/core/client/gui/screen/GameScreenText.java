@@ -1,11 +1,16 @@
 package micdoodle8.mods.galacticraft.core.client.gui.screen;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import micdoodle8.mods.galacticraft.api.client.IGameScreen;
 import micdoodle8.mods.galacticraft.api.client.IScreenManager;
 import micdoodle8.mods.galacticraft.api.prefab.entity.EntitySpaceshipBase;
+import micdoodle8.mods.galacticraft.core.GalacticraftCore;
 import micdoodle8.mods.galacticraft.core.client.render.entities.RenderPlayerGC;
 import micdoodle8.mods.galacticraft.core.tile.TileEntityTelemetry;
+import micdoodle8.mods.galacticraft.core.util.ColorUtil;
 import micdoodle8.mods.galacticraft.core.util.GCCoreUtil;
+import micdoodle8.mods.galacticraft.planets.asteroids.entities.EntityAstroMiner;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.renderer.Tessellator;
@@ -18,9 +23,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL11;
-
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class GameScreenText implements IGameScreen
 {
@@ -143,6 +145,12 @@ public class GameScreenText implements IGameScreen
         		str2 = "Speed: " + makeSpeedString(telemeter.clientData[2]);
         	}
     	}
+    	else if (GalacticraftCore.isPlanetsLoaded && entity instanceof EntityAstroMiner)
+    	{
+    		str2 = "x: " + telemeter.clientData[1];
+    		str3 = "z: " + telemeter.clientData[2];
+    		str4 = "Energy: " + telemeter.clientData[3];        		
+    	}
     	else
     	{
     		//Default - draw a simple time display just to show the Display Screen is working
@@ -184,7 +192,7 @@ public class GameScreenText implements IGameScreen
         GL11.glScalef(scaleText, scaleText, 1.0F);
 
         //Actually draw the text
-        int whiteColour = GCCoreUtil.to32BitColor(255, 240, 216, 255);
+        int whiteColour = ColorUtil.to32BitColor(255, 240, 216, 255);
         drawText(strName, whiteColour);
         drawText(str0, whiteColour);
         drawText(str1, whiteColour);

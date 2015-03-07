@@ -70,7 +70,7 @@ public class BlockSlimelingEgg extends Block implements ITileEntityProvider, Ite
     }
 
     @Override
-    public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z)
+    public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z, boolean willHarvest)
     {
         ItemStack currentStack = player.getCurrentEquippedItem();
         int l = world.getBlockMetadata(x, y, z);

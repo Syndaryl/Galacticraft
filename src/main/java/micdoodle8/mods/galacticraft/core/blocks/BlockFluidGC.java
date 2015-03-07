@@ -4,14 +4,17 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import micdoodle8.mods.galacticraft.core.GalacticraftCore;
 import micdoodle8.mods.galacticraft.core.proxy.ClientProxyCore;
+import micdoodle8.mods.galacticraft.core.util.OxygenUtil;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
 
@@ -63,7 +66,7 @@ public class BlockFluidGC extends BlockFluidClassic
     @Override
     public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer entityPlayer, int side, float hitX, float hitY, float hitZ)
     {
-    	if (world.isRemote && this.fluidName.equals("oil"))
+    	if (world.isRemote && this.fluidName.equals("oil") && entityPlayer instanceof EntityPlayerSP)
         	ClientProxyCore.playerClientHandler.onBuild(7, (EntityPlayerSP) entityPlayer);
 
     	return super.onBlockActivated(world, x, y, z, entityPlayer, side, hitX, hitY, hitZ);	
@@ -111,5 +114,23 @@ public class BlockFluidGC extends BlockFluidClassic
     public IIcon getFlowingIcon()
     {
         return this.flowingIcon;
+    }
+    
+    @Override
+    public boolean isFlammable(IBlockAccess world, int x, int y, int z, ForgeDirection face) 
+    {
+    	if (!(world instanceof World)) return false;
+    	if (OxygenUtil.noAtmosphericCombustion(((World) world).provider))
+        {
+        	if (!OxygenUtil.isAABBInBreathableAirBlock((World) world, AxisAlignedBB.getBoundingBox(x, y, z, x + 1, y + 2, z + 1)))
+        		return false;
+        }
+        
+    	if (this.fluidName.startsWith("fuel"))
+    	{
+    		((World) world).createExplosion(null, x, y, z, 6.0F, true);
+    		return true;
+    	}
+    	return (this.fluidName.startsWith("oil"));
     }
 }

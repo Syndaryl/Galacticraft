@@ -12,7 +12,6 @@ import micdoodle8.mods.galacticraft.core.wrappers.ScheduledBlockChange;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -56,11 +55,11 @@ public class ThreadFindSeal
         this.torchesToUpdate = new LinkedList<BlockVec3>();
 
         this.sealersAround = new HashMap<BlockVec3, TileEntityOxygenSealer>();
-        for (TileEntity tile : new ArrayList<TileEntity>(world.loadedTileEntityList))
+        for (TileEntityOxygenSealer tile : new ArrayList<TileEntityOxygenSealer>(TileEntityOxygenSealer.loadedTiles))
         {
-            if (tile instanceof TileEntityOxygenSealer && tile.getDistanceFrom(head.x, head.y, head.z) < 1024 * 1024)
+            if (tile.getWorldObj() == world && tile.getDistanceFrom(head.x, head.y, head.z) < 1024 * 1024)
             {
-                this.sealersAround.put(new BlockVec3(tile.xCoord, tile.yCoord, tile.zCoord), (TileEntityOxygenSealer) tile);
+                this.sealersAround.put(new BlockVec3(tile.xCoord, tile.yCoord, tile.zCoord), tile);
             }
         }
 
@@ -137,11 +136,12 @@ public class ThreadFindSeal
             this.currentLayer.add(this.head);
             if (this.head.x < -29990000 || this.head.z < -29990000 || this.head.x >= 29990000 || this.head.z >= 29990000)
             {
-                if (Blocks.air == this.head.getBlockID_noChunkLoad(this.world))
+                Block b = this.head.getBlockID_noChunkLoad(this.world);
+            	if (Blocks.air == b)
                 {
                     this.airToReplace.add(this.head.clone());
                 }
-                if (this.head.getBlockID_noChunkLoad(this.world) == GCBlocks.brightAir)
+            	else if (b == GCBlocks.brightAir)
                 {
                     this.airToReplaceBright.add(this.head.clone());
                 }
@@ -154,7 +154,7 @@ public class ThreadFindSeal
                 {
                     this.airToReplace.add(this.head.clone());
                 }
-                if (headblock == GCBlocks.brightAir)
+                else if (headblock == GCBlocks.brightAir)
                 {
                     this.airToReplaceBright.add(this.head.clone());
                 }

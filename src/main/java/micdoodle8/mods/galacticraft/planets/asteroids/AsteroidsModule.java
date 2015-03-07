@@ -17,6 +17,7 @@ import micdoodle8.mods.galacticraft.planets.IPlanetsModule;
 import micdoodle8.mods.galacticraft.planets.asteroids.blocks.AsteroidBlocks;
 import micdoodle8.mods.galacticraft.planets.asteroids.dimension.TeleportTypeAsteroids;
 import micdoodle8.mods.galacticraft.planets.asteroids.dimension.WorldProviderAsteroids;
+import micdoodle8.mods.galacticraft.planets.asteroids.entities.EntityAstroMiner;
 import micdoodle8.mods.galacticraft.planets.asteroids.entities.EntityEntryPod;
 import micdoodle8.mods.galacticraft.planets.asteroids.entities.EntityGrapple;
 import micdoodle8.mods.galacticraft.planets.asteroids.entities.EntitySmallAsteroid;
@@ -31,7 +32,7 @@ import micdoodle8.mods.galacticraft.planets.asteroids.recipe.RecipeManagerAstero
 import micdoodle8.mods.galacticraft.planets.asteroids.schematic.SchematicTier3Rocket;
 import micdoodle8.mods.galacticraft.planets.asteroids.tick.AsteroidsTickHandlerServer;
 import micdoodle8.mods.galacticraft.planets.asteroids.tile.*;
-import micdoodle8.mods.galacticraft.planets.asteroids.util.AsteroidsUtil;
+import micdoodle8.mods.galacticraft.planets.mars.MarsModule;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -268,10 +269,11 @@ public class AsteroidsModule implements IPlanetsModule
 
     private void registerNonMobEntities()
     {
-        AsteroidsUtil.registerAsteroidsNonMobEntity(EntitySmallAsteroid.class, "SmallAsteroidGC", ConfigManagerAsteroids.idEntitySmallAsteroid, 150, 1, true);
-        AsteroidsUtil.registerAsteroidsNonMobEntity(EntityGrapple.class, "GrappleHookGC", ConfigManagerAsteroids.idEntityGrappleHook, 150, 1, true);
-        AsteroidsUtil.registerAsteroidsNonMobEntity(EntityTier3Rocket.class, "Tier3RocketGC", ConfigManagerAsteroids.idEntityTier3Rocket, 150, 1, false);
-        AsteroidsUtil.registerAsteroidsNonMobEntity(EntityEntryPod.class, "EntryPodAsteroids", ConfigManagerAsteroids.idEntityEntryPod, 150, 1, true);
+        MarsModule.registerGalacticraftNonMobEntity(EntitySmallAsteroid.class, "SmallAsteroidGC", 150, 1, true);
+        MarsModule.registerGalacticraftNonMobEntity(EntityGrapple.class, "GrappleHookGC", 150, 1, true);
+        MarsModule.registerGalacticraftNonMobEntity(EntityTier3Rocket.class, "Tier3RocketGC", 150, 1, false);
+        MarsModule.registerGalacticraftNonMobEntity(EntityEntryPod.class, "EntryPodAsteroids", 150, 1, true);
+        MarsModule.registerGalacticraftNonMobEntity(EntityAstroMiner.class, "AstroMiner", 150, 1, true);
     }
 
     private void registerTileEntities()
@@ -281,6 +283,7 @@ public class AsteroidsModule implements IPlanetsModule
         GameRegistry.registerTileEntity(TileEntityShortRangeTelepad.class, "Short Range Telepad");
         GameRegistry.registerTileEntity(TileEntityTelepadFake.class, "Fake Short Range Telepad");
         GameRegistry.registerTileEntity(TileEntityTreasureChestAsteroids.class, "Asteroids Treasure Chest");
+        GameRegistry.registerTileEntity(TileEntityMinerBase.class, "Astro Miner Base");
     }
 
     @Override

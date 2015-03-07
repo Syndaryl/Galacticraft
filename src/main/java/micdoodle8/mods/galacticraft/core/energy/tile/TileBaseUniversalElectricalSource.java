@@ -16,6 +16,7 @@ import micdoodle8.mods.miccore.Annotations.VersionSpecific;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.lang.reflect.Method;
@@ -112,7 +113,7 @@ public class TileBaseUniversalElectricalSource extends TileBaseUniversalElectric
             }
             else if (EnergyConfigHandler.isMekanismLoaded() && item instanceof IEnergizedItem && ((IEnergizedItem) item).canReceive(itemStack))
             {
-                this.storage.extractEnergyGC((float) EnergizedItemManager.charge(itemStack, energyToCharge * EnergyConfigHandler.TO_MEKANISM_RATIO) * EnergyConfigHandler.MEKANISM_RATIO, false);
+                this.storage.extractEnergyGC((float) EnergizedItemManager.charge(itemStack, energyToCharge * EnergyConfigHandler.TO_MEKANISM_RATIO) / EnergyConfigHandler.TO_MEKANISM_RATIO, false);
             }
             else if (EnergyConfigHandler.isIndustrialCraft2Loaded())
             {
@@ -139,7 +140,7 @@ public class TileBaseUniversalElectricalSource extends TileBaseUniversalElectric
                             Method methodCharge = itemManagerIC2.getMethod("charge", ItemStack.class, double.class, int.class, boolean.class, boolean.class);
                             result = (Double) methodCharge.invoke(IC2manager, itemStack, (double) (energyToCharge * EnergyConfigHandler.TO_IC2_RATIO), this.tierGC + 1, false, false);
                         }
-                        float energy = (float) result * EnergyConfigHandler.IC2_RATIO;
+                        float energy = (float) result / EnergyConfigHandler.TO_IC2_RATIO;
                         this.storage.extractEnergyGC(energy, false);
                     }
                     else if (itemElectricIC2B.isInstance(item))
@@ -157,7 +158,7 @@ public class TileBaseUniversalElectricalSource extends TileBaseUniversalElectric
                             Method methodCharge = itemManagerIC2.getMethod("charge", ItemStack.class, double.class, int.class, boolean.class, boolean.class);
                             result = (Double) methodCharge.invoke(IC2manager, itemStack, (double) (energyToCharge * EnergyConfigHandler.TO_IC2_RATIO), this.tierGC + 1, false, false);
                         }
-                        float energy = (float) result * EnergyConfigHandler.IC2_RATIO;
+                        float energy = (float) result / EnergyConfigHandler.TO_IC2_RATIO;
                         this.storage.extractEnergyGC(energy, false);
                     }
                 }
@@ -212,7 +213,7 @@ public class TileBaseUniversalElectricalSource extends TileBaseUniversalElectric
     @RuntimeInterface(clazz = "ic2.api.energy.tile.IEnergySource", modID = "IC2")
     public void drawEnergy(double amount)
     {
-        this.storage.extractEnergyGC((float) amount * EnergyConfigHandler.IC2_RATIO, false);
+        this.storage.extractEnergyGC((float) amount / EnergyConfigHandler.TO_IC2_RATIO, false);
     }
 
     @VersionSpecific(version = "[1.7.10]")
@@ -228,152 +229,6 @@ public class TileBaseUniversalElectricalSource extends TileBaseUniversalElectric
         return this.getElectricalOutputDirections().contains(side);
     }
 
-    //	@Override
-    //	public ElectricityPack provideElectricity(ForgeDirection from, ElectricityPack request, boolean doProvide)
-    //	{
-    //		if (this.getElectricalOutputDirections().contains(from))
-    //		{
-    //			if (!doProvide)
-    //			{
-    //				return ElectricityPack.getFromWatts(this.getProvide(from), this.getVoltage());
-    //			}
-    //
-    //			return this.provideElectricity(request, doProvide);
-    //		}
-    //
-    //		return new ElectricityPack();
-    //	}
-
-    /**
-     * A non-side specific version of provideElectricity for you to optionally
-     * use it internally.
-     */
-    //	public ElectricityPack provideElectricity(ElectricityPack request, boolean doProvide)
-    //	{
-    //		if (request != null)
-    //		{
-    //			float requestedEnergy = Math.min(request.getWatts(), this.energyStored);
-    //
-    //			if (doProvide)
-    //			{
-    //				this.setEnergyStored(this.energyStored - requestedEnergy);
-    //			}
-    //
-    //			return ElectricityPack.getFromWatts(requestedEnergy, this.getVoltage());
-    //		}
-    //
-    //		return new ElectricityPack();
-    //	}
-
-    //	public ElectricityPack provideElectricity(float energy, boolean doProvide)
-    //	{
-    //		return this.provideElectricity(ElectricityPack.getFromWatts(energy, this.getVoltage()), doProvide);
-    //	}
-
-    //	public void produce()
-    //	{
-    //		if (!this.worldObj.isRemote)
-    //		{
-    //			for (ForgeDirection outputDirection : this.getElectricalOutputDirections())
-    //			{
-    //				if (outputDirection != ForgeDirection.UNKNOWN)
-    //				{
-    //					if (!this.produceUE(outputDirection))
-    //					{
-    //						this.produceExternal(outputDirection);
-    //					}
-    //				}
-    //			}
-    //		}
-    //	}
-
-    //	public boolean produceUE(ForgeDirection outputDirection)
-    //	{
-    //		if (!this.worldObj.isRemote && outputDirection != null && outputDirection != ForgeDirection.UNKNOWN)
-    //		{
-    //			float provide = this.getProvide(outputDirection);
-    //
-    //			if (provide > 0)
-    //			{
-    //				Vector3 thisVec = new Vector3(this);
-    //				TileEntity outputTile = thisVec.modifyPositionFromSide(outputDirection).getTileEntity(this.worldObj);
-    //				IElectricityNetwork outputNetwork = NetworkHelper.getElectricalNetworkFromTileEntity(outputTile, outputDirection);
-    //
-    //				if (outputNetwork != null)
-    //				{
-    //					ElectricityPack powerRequest = outputNetwork.getRequest(this);
-    //
-    //					if (powerRequest.getWatts() > 0)
-    //					{
-    //						ElectricityPack sendPack = ElectricityPack.min(ElectricityPack.getFromWatts(this.getEnergyStored(), this.getVoltage()), ElectricityPack.getFromWatts(provide, this.getVoltage()));
-    //						float rejectedPower = outputNetwork.produce(sendPack, true, this);
-    //						this.provideElectricity(Math.max(sendPack.getWatts() - rejectedPower, 0), true);
-    //						return true;
-    //					}
-    //				}
-    //				else if (outputTile instanceof IElectrical)
-    //				{
-    //					float requestedEnergy = ((IElectrical) outputTile).getRequest(outputDirection.getOpposite());
-    //
-    //					if (requestedEnergy > 0)
-    //					{
-    //						ElectricityPack sendPack = ElectricityPack.min(ElectricityPack.getFromWatts(this.getEnergyStored(), this.getVoltage()), ElectricityPack.getFromWatts(provide, this.getVoltage()));
-    //						float acceptedEnergy = ((IElectrical) outputTile).receiveElectricity(outputDirection.getOpposite(), sendPack, true);
-    //						this.provideElectricity(acceptedEnergy, true);
-    //						return true;
-    //					}
-    //				}
-    //			}
-    //		}
-    //
-    //		return false;
-    //	}
-
-    //	public boolean produceExternal(ForgeDirection outputDirection)
-    //	{
-    //		if (!this.worldObj.isRemote && outputDirection != null && outputDirection != ForgeDirection.UNKNOWN)
-    //		{
-    //			float provide = this.getProvide(outputDirection);
-    //
-    //			if (this.getEnergyStored() >= provide && provide > 0)
-    //			{
-    //				TileEntity adjacentEntity = new Vector3(this).modifyPositionFromSide(outputDirection).getTileEntity(this.worldObj);
-    //
-    //				if (EnergyConfigHandler.isThermalExpansionLoaded())
-    //				{
-    //					if (adjacentEntity instanceof IEnergyHandler)
-    //					{
-    //						int teProvide = (int) Math.floor(provide * EnergyConfigHandler.TO_TE_RATIO);
-    //						int energyUsed = Math.min(((IEnergyHandler) adjacentEntity).receiveEnergy(outputDirection.getOpposite(), teProvide, false), teProvide);
-    //						this.provideElectricity(energyUsed * EnergyConfigHandler.TE_RATIO, true);
-    //						return true;
-    //					}
-    //				}
-    //
-    ////				if (EnergyConfigHandler.isBuildcraftLoaded())
-    ////				{
-    ////					if (adjacentEntity instanceof IPowerReceptor)
-    ////					{
-    ////						PowerReceiver receiver = ((IPowerReceptor) adjacentEntity).getPowerReceiver(outputDirection.getOpposite());
-    ////
-    ////						if (receiver != null)
-    ////						{
-    ////							if (receiver.powerRequest() > 0)
-    ////							{
-    ////								float bc3Provide = provide * EnergyConfigHandler.TO_BC_RATIO;
-    ////								float energyUsed = Math.min(receiver.receiveEnergy(Type.MACHINE, bc3Provide, outputDirection.getOpposite()), bc3Provide);
-    ////								this.provideElectricity(energyUsed * EnergyConfigHandler.BC3_RATIO, true);
-    ////							}
-    ////						}
-    ////
-    ////						return true;
-    ////					}
-    ////				}
-    //			}
-    //		}
-    //
-    //		return false;
-    //	}
     @Override
     public float getProvide(ForgeDirection direction)
     {
@@ -400,9 +255,21 @@ public class TileBaseUniversalElectricalSource extends TileBaseUniversalElectric
         return ForgeDirection.UNKNOWN;
     }
 
-    @RuntimeInterface(clazz = "buildcraft.api.power.IPowerEmitter", modID = "BuildCraft|Energy")
+    @RuntimeInterface(clazz = "buildcraft.api.power.IPowerEmitter", modID = "")
     public boolean canEmitPowerFrom(ForgeDirection side)
     {
         return this.getElectricalOutputDirections().contains(side);
+    }
+    
+    @Override
+    @RuntimeInterface(clazz = "cofh.api.energy.IEnergyHandler", modID = "")
+    public int extractEnergy(ForgeDirection from, int maxExtract, boolean simulate)
+    {
+    	if (!this.getElectricalOutputDirections().contains(from))
+    	{
+    		return 0;
+    	}
+
+    	return MathHelper.floor_float(this.storage.extractEnergyGC(maxExtract / EnergyConfigHandler.TO_RF_RATIO, !simulate) * EnergyConfigHandler.TO_RF_RATIO);
     }
 }
